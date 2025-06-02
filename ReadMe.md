@@ -71,6 +71,8 @@ While the smurf leadership appreciates variety, it does so just enough to provid
 
 For both the frontend and the backend, work should be done in a fork of the original repository. The work should also be documented in some way — either through commit messages or separate documentation.
 
+Implement your work in a way that allows for easy future expansion.
+
 ### Frontend
 
 According to the original developer, the backend is considered complete since all data in the database can be queried. However, there is one notable flaw: individual entities cannot be queried separately — only all entities together in a single batch. (In a world burdened with AI, we should perhaps be grateful for even this much.)
@@ -90,6 +92,10 @@ Design a user-friendly and visually appealing dashboard where the loaded data ca
 According to the original developer, the backend is considered complete since all data in the database can be queried. However, there is one notable flaw: individual entities cannot be queried separately — only all entities together in a single batch. (In a world burdened with AI, we should perhaps be grateful for even this much.)
 On the positive side, it has been successfully implemented so that there is no eager loading — that is, if an object references other objects, it only does so by their IDs.
 
-#### Task
+#### Task 1
 
 Of course, this cannot remain as-is. Refactor the backend code to allow for more flexible data retrieval. You may also implement additional features, such as search functionality. The original endpoints should be preserved, but any additional ones are welcomed.
+
+#### Task 2
+
+Create a service responsible for exporting the dwarves' data into a neatly formatted .txt file.

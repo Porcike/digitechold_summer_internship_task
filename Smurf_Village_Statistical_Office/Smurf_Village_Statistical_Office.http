@@ -1,0 +1,6 @@
+@Smurf_Village_Statistical_Office_HostAddress = http://localhost:5034
+
+GET {{Smurf_Village_Statistical_Office_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -35,21 +35,18 @@ namespace Smurf_Village_Statistical_Office.Controllers
             var isFavouriteBrandInvalid = string.IsNullOrEmpty(favouriteBrand);
             var isFavouriteColorInvalid = string.IsNullOrEmpty(favouriteColor);
 
-            name = name?.ToLower();
-            favouriteColor = favouriteColor?.ToLower();
-
-            Enum.TryParse(job, true, out Job parsedJob);
-            Enum.TryParse(favouriteFood, true, out Food parsedFavouriteFood);
-            Enum.TryParse(favouriteBrand, true, out Brand parsedFavouriteBrand);
+            var jobParseWasSuccessFul = Enum.TryParse(job, true, out Job parsedJob);
+            var foodParseWasSuccessFul = Enum.TryParse(favouriteFood, true, out Food parsedFavouriteFood);
+            var brandParseWasSuccessful = Enum.TryParse(favouriteBrand, true, out Brand parsedFavouriteBrand);
 
             var smurfs = await _context.Smurfs
                 .Where(s => 
-                    (isNameInvalid || (s.Name != null && s.Name.ToLower() == name)) &&
+                    (isNameInvalid || (EF.Functions.Like(s.Name, name))) &&
                     (isAgeInvalid || s.Age == age) &&
-                    (isJobInvalid || s.Job == parsedJob) &&
-                    (isFavouriteFoodInvalid || s.FavouriteFood == parsedFavouriteFood) &&
-                    (isFavouriteBrandInvalid || s.FavouriteBrand == parsedFavouriteBrand) &&
-                    (isFavouriteColorInvalid || s.FavouriteColor.Name.ToLower() == favouriteColor))
+                    (isJobInvalid || (jobParseWasSuccessFul && s.Job == parsedJob)) &&
+                    (isFavouriteFoodInvalid || (foodParseWasSuccessFul && s.FavouriteFood == parsedFavouriteFood)) &&
+                    (isFavouriteBrandInvalid || (brandParseWasSuccessful && s.FavouriteBrand == parsedFavouriteBrand)) &&
+                    (isFavouriteColorInvalid || EF.Functions.Like(s.FavouriteColor.Name, favouriteColor)))
                 .AsNoTracking()
                 .ToListAsync();
 

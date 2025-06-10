@@ -28,15 +28,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
             var isMaxCapacityInvalid = maxCapacity == null;
             var isColorInvalid = string.IsNullOrEmpty(color);
 
-            resident = resident?.ToLower();
-            color = color?.ToLower();
-
             var houses = await _context.MushroomHouses
                 .Where(h =>
-                    (isResidentInvalid || h.Residents.Any(s => s.Name != null && s.Name.ToLower() == resident)) &&
+                    (isResidentInvalid || h.Residents.Any(s => EF.Functions.Like(s.Name, resident))) &&
                     (isMinCapacityInvalid || h.Capacity >= minCapacity) && 
                     (isMaxCapacityInvalid || h.Capacity <= maxCapacity) &&
-                    (isColorInvalid || h.Color.Name.ToLower() == color))
+                    (isColorInvalid || EF.Functions.Like(h.Color.Name, color)))
                 .Select(h => new
                 {
                     h.Id,
@@ -55,6 +52,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> GetMushroomHouse([FromRoute] int id)
         {
             var house = await _context.MushroomHouses
+                .Where(h => h.Id == id)
                 .Select(h => new
                 {
                     h.Id,
@@ -64,7 +62,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
                     ResidentIds = h.Residents.Select(r => r.Id).ToList()
                 })
                 .AsNoTracking()
-                .FirstOrDefaultAsync(h => h.Id == id);    
+                .FirstOrDefaultAsync();    
 
             return house == null ? NotFound() : Ok(house);
         }

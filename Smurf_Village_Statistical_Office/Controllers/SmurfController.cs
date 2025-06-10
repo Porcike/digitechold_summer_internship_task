@@ -43,14 +43,14 @@ namespace Smurf_Village_Statistical_Office.Controllers
             Enum.TryParse(favouriteBrand, true, out Brand parsedFavouriteBrand);
 
             var smurfs = await _context.Smurfs
-                .AsNoTracking()
                 .Where(s => 
                     (isNameInvalid || (s.Name != null && s.Name.ToLower() == name)) &&
-                    (age == null || s.Age == age) &&
+                    (isAgeInvalid || s.Age == age) &&
                     (isJobInvalid || s.Job == parsedJob) &&
                     (isFavouriteFoodInvalid || s.FavouriteFood == parsedFavouriteFood) &&
                     (isFavouriteBrandInvalid || s.FavouriteBrand == parsedFavouriteBrand) &&
                     (isFavouriteColorInvalid || s.FavouriteColor.Name.ToLower() == favouriteColor))
+                .AsNoTracking()
                 .ToListAsync();
 
             return Ok(smurfs);
@@ -61,7 +61,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
         {
             var smurf = await _context.Smurfs
                 .AsNoTracking()
-                .SingleOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id);
 
             return smurf == null ? NotFound() : Ok(smurf);  
         }

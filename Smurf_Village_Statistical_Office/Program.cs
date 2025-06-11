@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
+using Smurf_Village_Statistical_Office.Services;
 
 namespace Smurf_Village_Statistical_Office
 {
@@ -14,6 +15,7 @@ namespace Smurf_Village_Statistical_Office
                 options.UseInMemoryDatabase("SmurfVillageDb"));
 
             // Add services to the container.
+            builder.Services.AddScoped<ISmurfService, SmurfService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

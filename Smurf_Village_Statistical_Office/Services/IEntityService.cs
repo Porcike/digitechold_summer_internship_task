@@ -3,6 +3,6 @@
     public interface IEntityService<TDto, TDtoFilter>
     {
         Task<IEnumerable<TDto>> GetAllAsync(TDtoFilter filter);
-        Task<TDto> GetByIdAsnyc(int id);
+        Task<TDto?> GetByIdAsnyc(int id);
     }
 }

@@ -1,8 +1,12 @@
-﻿namespace Smurf_Village_Statistical_Office.DTO
+﻿using Smurf_Village_Statistical_Office.Utils;
+
+namespace Smurf_Village_Statistical_Office.DTO
 {
-    public record WorkingPlaceDto(
-        int Id,
-        string Name,
-        List<int> EmployeeIds,
-        List<JobDto> AcceptedJobs);
+    public record WorkingPlaceDto
+    {
+        public int Id { get; init; }
+        public required string Name { get; init; }
+        public required List<Job> AcceptedJobs { get; init; }
+        public required List<int> EmployeeIds { get; init; }
+    }
 }

@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Smurf_Village_Statistical_Office.Data;
-using Smurf_Village_Statistical_Office.Utils;
+﻿using Microsoft.AspNetCore.Mvc;
+using Smurf_Village_Statistical_Office.DTO.Filters;
+using Smurf_Village_Statistical_Office.Services;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {
@@ -10,58 +8,24 @@ namespace Smurf_Village_Statistical_Office.Controllers
     [ApiController]
     public class WorkingPlacesController : ControllerBase
     {
-        private readonly SmurfVillageContext _context;
+        private readonly IWorkingPlaceService _workingplaceService;
 
-        public WorkingPlacesController(SmurfVillageContext context)
+        public WorkingPlacesController(IWorkingPlaceService workingPlaceService)
         {
-            _context = context;
+            _workingplaceService = workingPlaceService;
         }
 
         [HttpGet("WorkingPlaces")]
-        public async Task<IActionResult> GetWorkingPlaces(
-            [FromQuery] string? name,
-            [FromQuery] string? employee,
-            [FromQuery] string? job)
+        public async Task<IActionResult> GetWorkingPlaces([FromQuery] WorkingPlaceFilterDto filter)
         {
-            var isNameInvalid = string.IsNullOrEmpty(name);
-            var isEmployeeInvalid = string.IsNullOrEmpty(employee);
-            var isJobInvalid = string.IsNullOrEmpty(job);
-
-            var jobParseWasSuccessFul = Enum.TryParse(job, true, out Job parsedJob);
-
-            var workplaces = await _context.WorkingPlaces
-                .Where(w => 
-                    (isNameInvalid || EF.Functions.Like(w.Name, name)) &&
-                    (isEmployeeInvalid || w.Employees.Any(e => EF.Functions.Like(e.Name, employee))) &&
-                    (isJobInvalid || (jobParseWasSuccessFul && w.AcceptedJobs.Contains(parsedJob))))
-                .Select(w => new
-                {
-                    w.Id,
-                    w.Name,
-                    w.AcceptedJobs,
-                    EmployeeIds = w.Employees.Select(e => e.Id).ToList()
-                })
-                .AsNoTracking()
-                .ToListAsync();
-
-            return Ok(workplaces);
+            var workingPlaces = await _workingplaceService.GetAllAsync(filter);
+            return Ok(workingPlaces);
         }
 
         [HttpGet("WorkingPlaces/{id}")]
         public async Task<IActionResult> GetWorkingPlace([FromRoute] int id)
         {
-            var workingPlace = await _context.WorkingPlaces
-                .Where(w => w.Id == id)
-                .Select(w => new
-                {
-                    w.Id,
-                    w.Name,
-                    w.AcceptedJobs,
-                    EmployeeIds = w.Employees.Select(e => e.Id).ToList()
-                })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-
+            var workingPlace = await _workingplaceService.GetByIdAsnyc(id);
             return workingPlace == null ? NotFound() : Ok(workingPlace);
         }
     }

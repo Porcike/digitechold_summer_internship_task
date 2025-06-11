@@ -16,8 +16,12 @@ namespace Smurf_Village_Statistical_Office
 
             // Add services to the container.
             builder.Services.AddScoped<ISmurfService, SmurfService>();
+            builder.Services.AddScoped<IMushroomHouseService, MushroomHouseService>();
+            builder.Services.AddScoped<IWorkingPlaceService, WorkingPlaceService>();
+            builder.Services.AddScoped<ILeisureVenueService, LeisureVenueService>();
 
             builder.Services.AddControllers();
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 

@@ -3,7 +3,7 @@ using Smurf_Village_Statistical_Office.DTO.Filters;
 
 namespace Smurf_Village_Statistical_Office.Services
 {
-    public interface IWorkingPlaceService : IEntityService<WorkingPlaceDto, WorkingPlaceFilterDto>
+    public interface IMushroomHouseService : IEntityService<MushroomHouseDto, MushroomHouseFilterDto>
     {
     }
 }

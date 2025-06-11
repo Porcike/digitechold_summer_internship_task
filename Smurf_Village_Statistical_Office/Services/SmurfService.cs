@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
 using Smurf_Village_Statistical_Office.Utils;
-using System.Xml.Linq;
 
 namespace Smurf_Village_Statistical_Office.Services
 {
@@ -46,21 +43,9 @@ namespace Smurf_Village_Statistical_Office.Services
                     Id = s.Id,
                     Name = s.Name,
                     Age = s.Age,
-                    Job = new JobDto
-                    {
-                        Id = (int)s.Job,
-                        Name = s.Job.ToString()
-                    },
-                    FavouriteFood = new FoodDto 
-                    {
-                        Id = (int)s.FavouriteFood,
-                        Name = s.FavouriteFood.ToString()
-                    },
-                    FavouriteBrand = new BrandDto 
-                    {
-                        Id = (int)s.FavouriteBrand,
-                        Name = s.FavouriteBrand.ToString()
-                    },
+                    Job = s.Job,
+                    FavouriteFood = s.FavouriteFood,
+                    FavouriteBrand = s.FavouriteBrand,
                     FavouriteColor = new ColorDto 
                     {
                         Name = s.FavouriteColor.Name,
@@ -85,21 +70,9 @@ namespace Smurf_Village_Statistical_Office.Services
                     Id = s.Id,
                     Name = s.Name,
                     Age = s.Age,
-                    Job = new JobDto
-                    {
-                        Id = (int)s.Job,
-                        Name = s.Job.ToString()
-                    },
-                    FavouriteFood = new FoodDto
-                    {
-                        Id = (int)s.FavouriteFood,
-                        Name = s.FavouriteFood.ToString()
-                    },
-                    FavouriteBrand = new BrandDto
-                    {
-                        Id = (int)s.FavouriteBrand,
-                        Name = s.FavouriteBrand.ToString()
-                    },
+                    Job = s.Job,
+                    FavouriteFood = s.FavouriteFood,
+                    FavouriteBrand = s.FavouriteBrand,
                     FavouriteColor = new ColorDto
                     {
                         Name = s.FavouriteColor.Name,

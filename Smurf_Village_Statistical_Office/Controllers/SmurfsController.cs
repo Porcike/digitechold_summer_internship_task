@@ -1,12 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Smurf_Village_Statistical_Office.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.DTO.Filters;
 using Smurf_Village_Statistical_Office.Services;
-using Smurf_Village_Statistical_Office.Utils;
-using System.Drawing;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {

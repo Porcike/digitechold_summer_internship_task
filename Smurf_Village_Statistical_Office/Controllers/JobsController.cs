@@ -7,11 +7,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class JobController : ControllerBase
+    public class JobsController : ControllerBase
     {
         private readonly SmurfVillageContext _context;
 
-        public JobController(SmurfVillageContext context)
+        public JobsController(SmurfVillageContext context)
         {
             _context = context;
         }

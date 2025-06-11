@@ -10,11 +10,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class SmurfController : ControllerBase
+    public class SmurfsController : ControllerBase
     {
         private readonly SmurfVillageContext _context;
 
-        public SmurfController(SmurfVillageContext context)
+        public SmurfsController(SmurfVillageContext context)
         {
             _context = context;
         }

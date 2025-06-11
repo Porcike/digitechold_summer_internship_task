@@ -7,25 +7,25 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class BrandController : ControllerBase
+    public class FoodsController : ControllerBase
     {
         private readonly SmurfVillageContext _context;
 
-        public BrandController(SmurfVillageContext context)
+        public FoodsController(SmurfVillageContext context)
         {
             _context = context;
         }
 
         [HttpGet]
-        [Route("Brands")]
-        public async Task<IActionResult> GetBrands()
+        [Route("Foods")]
+        public async Task<IActionResult> GetFoods()
         {
-            var items = Enum.GetValues<Brand>()
-                 .Cast<Brand>()
-                 .Select(b => new
+            var items = Enum.GetValues<Food>()
+                 .Cast<Food>()
+                 .Select(f => new
                  {
-                     Id = (int)b,
-                     Name = b.ToString()
+                     Id = (int)f,
+                     Name = f.ToString()
                  });
             return Ok(items);
         }

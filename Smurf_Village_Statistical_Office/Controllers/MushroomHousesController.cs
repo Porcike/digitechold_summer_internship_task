@@ -7,11 +7,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class MushroomHouseController : ControllerBase
+    public class MushroomHousesController : ControllerBase
     {
         private readonly SmurfVillageContext _context;
 
-        public MushroomHouseController(SmurfVillageContext context)
+        public MushroomHousesController(SmurfVillageContext context)
         {
             _context = context;
         }

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace Smurf_Village_Statistical_Office.Services
+﻿namespace Smurf_Village_Statistical_Office.Services
 {
     public interface IEntityService<TDto, TDtoFilter>
     {

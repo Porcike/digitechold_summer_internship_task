@@ -8,11 +8,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class LeisureVenueController : ControllerBase
+    public class LeisureVenuesController : ControllerBase
     {
         private readonly SmurfVillageContext _context;
 
-        public LeisureVenueController(SmurfVillageContext context)
+        public LeisureVenuesController(SmurfVillageContext context)
         {
             _context = context;
         }

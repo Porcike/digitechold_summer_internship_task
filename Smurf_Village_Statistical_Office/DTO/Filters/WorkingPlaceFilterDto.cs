@@ -1,6 +1,7 @@
 ﻿namespace Smurf_Village_Statistical_Office.DTO.Filters
 {
-    public class WorkingPlaceFilterDto
-    {
-    }
+    public record WorkingPlaceFilterDto(
+        string? name,
+        string? employee,
+        string? acceptedJob);
 }

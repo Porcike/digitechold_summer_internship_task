@@ -44,15 +44,12 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfExportServices
                 : (null, null);
         }
 
-        private string CreateStringRepresentation(Smurf smurf)
-        {
-            return
-                $"Name: {smurf.Name}\n" +
-                $"Age: {smurf.Age}\n" +
-                $"Job: {smurf.Job.ToString()}\n" +
-                $"Favourite food: {smurf.FavouriteColor.ToString()}\n" +
-                $"Favourite brand: {smurf.FavouriteBrand.ToString()}\n" +
-                $"Favourite color: {smurf.FavouriteColor.Name}\n";
-        }
+        private string CreateStringRepresentation(Smurf smurf) =>
+            $"Name: {smurf.Name}\n" +
+            $"Age: {smurf.Age}\n" +
+            $"Job: {smurf.Job.ToString()}\n" +
+            $"Favourite food: {smurf.FavouriteColor.ToString()}\n" +
+            $"Favourite brand: {smurf.FavouriteBrand.ToString()}\n" +
+            $"Favourite color: {smurf.FavouriteColor.Name}\n";
     }
 }

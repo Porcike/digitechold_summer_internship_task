@@ -33,7 +33,14 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueService
                     (isMaxCapacityProvided || v.Capacity <= filter.maxCapacity) &&
                     (isMemberProvided || v.Members.Any(m => EF.Functions.Like(m.Name, filter.member))) &&
                     (isBrandProvided || brandParseWasSuccessful && v.AcceptedBrand == parsedBrand))
-                .Select(venue => ToDto(venue))
+                .Select(v => new LeisureVenueDto
+                {
+                    Id = v.Id,
+                    Name = v.Name,
+                    Capacity = v.Capacity,
+                    AcceptedBrand = v.AcceptedBrand,
+                    MemberIds = v.Members.Select(m => m.Id).ToList()
+                })
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -43,24 +50,19 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueService
         public async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
         {
             var venue = await _context.LeisureVenues
+                .Where(v => v.Id == id)
+                .Select(v => new LeisureVenueDto
+                {
+                    Id = v.Id,
+                    Name = v.Name,
+                    Capacity = v.Capacity,
+                    AcceptedBrand = v.AcceptedBrand,
+                    MemberIds = v.Members.Select(m => m.Id).ToList()
+                })
                 .AsNoTracking()
-                .FirstOrDefaultAsync(v => v.Id == id);
+                .FirstOrDefaultAsync();
 
-            return venue != null 
-                ? ToDto(venue) 
-                : null;
-        }
-
-        private LeisureVenueDto ToDto(LeisureVenue venue)
-        {
-            return new LeisureVenueDto
-            {
-                Id = venue.Id,
-                Name = venue.Name,
-                Capacity = venue.Capacity,
-                AcceptedBrand = venue.AcceptedBrand,
-                MemberIds = venue.Members.Select(m => m.Id).ToList()
-            };
+            return venue;
         }
     }
 }

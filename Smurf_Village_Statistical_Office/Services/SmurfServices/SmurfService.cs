@@ -2,7 +2,6 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfService
@@ -39,7 +38,23 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
                     (isFavouriteFoodProvided || foodParseWasSuccessFul && s.FavouriteFood == parsedFavouriteFood) &&
                     (isFavouriteBrandProvided || brandParseWasSuccessful && s.FavouriteBrand == parsedFavouriteBrand) &&
                     (isFavouriteColorProvided || EF.Functions.Like(s.FavouriteColor.Name, filter.favouriteColor)))
-                .Select(s => ToDto(s))
+                .Select(s => new SmurfDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Age = s.Age,
+                    Job = s.Job,
+                    FavouriteFood = s.FavouriteFood,
+                    FavouriteBrand = s.FavouriteBrand,
+                    FavouriteColor = new ColorDto
+                    {
+                        Name = s.FavouriteColor.Name,
+                        Red = s.FavouriteColor.R,
+                        Green = s.FavouriteColor.G,
+                        Blue = s.FavouriteColor.B,
+                        Alpha = s.FavouriteColor.A
+                    }
+                })
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -49,33 +64,29 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
         public async Task<SmurfDto?> GetByIdAsnyc(int id)
         {
             var smurf = await _context.Smurfs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == id);
-
-            return smurf != null 
-                ? ToDto(smurf) 
-                : null;
-        }
-
-        private SmurfDto ToDto(Smurf smurf)
-        {
-            return new SmurfDto
-            {
-                Id = smurf.Id,
-                Name = smurf.Name,
-                Age = smurf.Age,
-                Job = smurf.Job,
-                FavouriteFood = smurf.FavouriteFood,
-                FavouriteBrand = smurf.FavouriteBrand,
-                FavouriteColor = new ColorDto
+                .Where(s => s.Id == id)
+                .Select(s => new SmurfDto
                 {
-                    Name = smurf.FavouriteColor.Name,
-                    Red = smurf.FavouriteColor.R,
-                    Green = smurf.FavouriteColor.G,
-                    Blue = smurf.FavouriteColor.B,
-                    Alpha = smurf.FavouriteColor.A
-                }
-            };
+                    Id = s.Id,
+                    Name = s.Name,
+                    Age = s.Age,
+                    Job = s.Job,
+                    FavouriteFood = s.FavouriteFood,
+                    FavouriteBrand = s.FavouriteBrand,
+                    FavouriteColor = new ColorDto
+                    {
+                        Name = s.FavouriteColor.Name,
+                        Red = s.FavouriteColor.R,
+                        Green = s.FavouriteColor.G,
+                        Blue = s.FavouriteColor.B,
+                        Alpha = s.FavouriteColor.A
+                    }
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            return smurf;
         }
+
     }
 }

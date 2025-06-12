@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.Data;
+using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Controllers
@@ -17,17 +17,32 @@ namespace Smurf_Village_Statistical_Office.Controllers
         }
 
         [HttpGet]
-        [Route("Foods")]
-        public async Task<IActionResult> GetFoods()
+        [Route("Jobs")]
+        public async Task<IActionResult> GetJobs()
         {
-            var items = Enum.GetValues<Food>()
-                 .Cast<Food>()
-                 .Select(f => new
+            var jobs = Enum.GetValues<Job>()
+                 .Cast<Job>()
+                 .Select(j => new JobDto
                  {
-                     Id = (int)f,
-                     Name = f.ToString()
+                     Id = (int)j,
+                     Name = j.ToString()
                  });
-            return Ok(items);
+
+            return Ok(jobs);
+        }
+
+        [HttpGet]
+        [Route("Jobs/{id}")]
+        public async Task<IActionResult> GetJob([FromRoute] int id)
+        {
+            var isValid = Enum.IsDefined(typeof(Job), id);
+            return isValid 
+                ? Ok(new JobDto 
+                {
+                    Id = id,
+                    Name = ((Job)id).ToString()
+                }) 
+                : NotFound();
         }
     }
 }

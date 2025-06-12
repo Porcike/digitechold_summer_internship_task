@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.Data;
+using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Controllers
@@ -20,14 +20,29 @@ namespace Smurf_Village_Statistical_Office.Controllers
         [Route("Brands")]
         public async Task<IActionResult> GetBrands()
         {
-            var items = Enum.GetValues<Brand>()
+            var brands = Enum.GetValues<Brand>()
                  .Cast<Brand>()
-                 .Select(b => new
+                 .Select(b => new BrandDto
                  {
                      Id = (int)b,
                      Name = b.ToString()
                  });
-            return Ok(items);
+
+            return Ok(brands);
+        }
+
+        [HttpGet]
+        [Route("Brands/{id}")]
+        public async Task<IActionResult> GetBrand([FromRoute] int id)
+        {
+            var isValid = Enum.IsDefined(typeof(Brand), id);
+            return isValid
+                ? Ok(new BrandDto
+                {
+                    Id = id,
+                    Name = ((Brand)id).ToString()
+                }) 
+                : NotFound();
         }
     }
 }

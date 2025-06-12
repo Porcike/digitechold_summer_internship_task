@@ -7,7 +7,6 @@ using Smurf_Village_Statistical_Office.Services.MushroomHouseService;
 using Smurf_Village_Statistical_Office.Services.SmurfExportServices;
 using Smurf_Village_Statistical_Office.Services.SmurfService;
 using Smurf_Village_Statistical_Office.Services.WorkingPlaceService;
-using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office
 {
@@ -53,7 +52,6 @@ namespace Smurf_Village_Statistical_Office
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

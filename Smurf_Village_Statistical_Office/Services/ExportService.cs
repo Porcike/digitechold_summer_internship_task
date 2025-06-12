@@ -17,48 +17,68 @@ namespace Smurf_Village_Statistical_Office.Services
         {
             if(!_smurfsExportStrategies.TryGetValue(type.ToLower(), out var strategy))
             {
-                return new ExportStatus(
-                    bytes: null,
-                    contentType: null,
-                    fileName: null,
-                    typeNotFound: true,
-                    entityNotFound: false);
+                return new ExportStatus
+                {
+                    Bytes = null,
+                    ContentType = null,
+                    FileName = null,
+                    TypeNotFound = true,
+                    EnityNotFound = false,
+                };
             }
 
             var (bytes, exportType) = await strategy.ExportAllAsync();
             var contentType = ExportUtil.exportDictionary[exportType];
             var fileName = $"data_{DateTime.Now:yyyyMMddHHmmss}.{exportType.ToString().ToLower()}";
 
-            return new ExportStatus(bytes, contentType, fileName, false, false);
+            return new ExportStatus
+            {
+                Bytes = bytes,
+                ContentType = contentType,
+                FileName = fileName,
+                TypeNotFound = false,
+                EnityNotFound = false
+            };
         }
 
         public async Task<ExportStatus> ExportByIdAsync(int id, string type)
         {
             if (!_smurfsExportStrategies.TryGetValue(type.ToLower(), out var strategy))
             {
-                return new ExportStatus(
-                    bytes: null,
-                    contentType: null,
-                    fileName: null,
-                    typeNotFound: true,
-                    entityNotFound: false);
+                return new ExportStatus
+                {
+                    Bytes = null,
+                    ContentType = null,
+                    FileName = null,
+                    TypeNotFound = true,
+                    EnityNotFound = false,
+                };
             }
 
             var (bytes, exportType) = await strategy.ExportById(id);
             if(bytes == null || exportType == null)
             {
-                return new ExportStatus(
-                    bytes: null,
-                    contentType: null,
-                    fileName: null,
-                    typeNotFound: false,
-                    entityNotFound: true);
+                return new ExportStatus
+                {
+                    Bytes = null,
+                    ContentType = null,
+                    FileName = null,
+                    TypeNotFound = false,
+                    EnityNotFound = true,
+                };
             }
 
             var contentType = ExportUtil.exportDictionary[exportType ?? 0];
             var fileName = $"data_{DateTime.Now:yyyyMMddHHmmss}.{exportType?.ToString().ToLower()}";
 
-            return new ExportStatus(bytes, contentType, fileName, false, false);
+            return new ExportStatus
+            {
+                Bytes = bytes,
+                ContentType = contentType,
+                FileName = fileName,
+                TypeNotFound = false,
+                EnityNotFound = false,
+            };
         }
     }
 }

@@ -2,7 +2,6 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
@@ -29,7 +28,13 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
                     (isNameProvided || EF.Functions.Like(w.Name, filter.name)) &&
                     (isEmployeeProvided || w.Employees.Any(e => EF.Functions.Like(e.Name, filter.employee))) &&
                     (isJobProvided || jobParseWasSuccessFul && w.AcceptedJobs.Contains(parsedJob)))
-                .Select(w => ToDto(w))
+                .Select(w => new WorkingPlaceDto
+                {
+                    Id = w.Id,
+                    Name = w.Name,
+                    AcceptedJobs = w.AcceptedJobs,
+                    EmployeeIds = w.Employees.Select(e => e.Id).ToList()
+                })
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -39,23 +44,18 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
         public async Task<WorkingPlaceDto?> GetByIdAsnyc(int id)
         {
             var workplace = await _context.WorkingPlaces
+                .Where(w => w.Id == id)
+                .Select(w => new WorkingPlaceDto
+                {
+                    Id = w.Id,
+                    Name = w.Name,
+                    AcceptedJobs = w.AcceptedJobs,
+                    EmployeeIds = w.Employees.Select(e => e.Id).ToList()
+                })
                 .AsNoTracking()
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync();
 
-            return workplace != null 
-                ? ToDto(workplace) 
-                : null;
-        }
-
-        private WorkingPlaceDto ToDto(WorkingPlace workingPlace)
-        {
-            return new WorkingPlaceDto
-            {
-                Id = workingPlace.Id,
-                Name = workingPlace.Name,
-                AcceptedJobs = workingPlace.AcceptedJobs,
-                EmployeeIds = workingPlace.Employees.Select(e => e.Id).ToList()
-            };
+            return workplace;
         }
     }
 }

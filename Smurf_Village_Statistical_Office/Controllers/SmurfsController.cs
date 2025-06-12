@@ -44,11 +44,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 
             var exportStatus = await _exportService.ExportAllAsync(type);
 
-            return exportStatus.bytes == null 
-                || exportStatus.contentType == null 
-                || exportStatus.fileName == null
+            return exportStatus.Bytes == null 
+                || exportStatus.ContentType == null 
+                || exportStatus.FileName == null
                 ? BadRequest("Unknown export type!")
-                : File(exportStatus.bytes, exportStatus.contentType, exportStatus.fileName);
+                : File(exportStatus.Bytes, exportStatus.ContentType, exportStatus.FileName);
         }
 
         [HttpGet("Smurfs/{id}/actions/export/{type}")]
@@ -61,11 +61,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
 
             var exportStatus = await _exportService.ExportByIdAsync(id, type);
 
-            return exportStatus.bytes == null 
-                || exportStatus.contentType == null 
-                || exportStatus.fileName == null
-                ? exportStatus.typeNotFound ? BadRequest("Unknown export type!") : NotFound()
-                : File(exportStatus.bytes, exportStatus.contentType, exportStatus.fileName);
+            return exportStatus.Bytes == null 
+                || exportStatus.ContentType == null 
+                || exportStatus.FileName == null
+                ? exportStatus.TypeNotFound ? BadRequest("Unknown export type!") : NotFound()
+                : File(exportStatus.Bytes, exportStatus.ContentType, exportStatus.FileName);
         }
     }
 }

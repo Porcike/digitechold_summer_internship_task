@@ -2,7 +2,6 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Models;
 
 namespace Smurf_Village_Statistical_Office.Services.MushroomHouseService
 {
@@ -28,7 +27,21 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseService
                     (isMinCapacityProvided || h.Capacity >= filter.minCapacity) &&
                     (isMaxCapacityProvided || h.Capacity <= filter.maxCapacity) &&
                     (isColorProvided || EF.Functions.Like(h.Color.Name, filter.color)))
-                .Select(h => ToDto(h))
+                .Select(h => new MushroomHouseDto
+                {
+                    Id = h.Id,
+                    Capacity = h.Capacity,
+                    Color = new ColorDto
+                    {
+                        Name = h.Color.Name,
+                        Red = h.Color.R,
+                        Green = h.Color.G,
+                        Blue = h.Color.B,
+                        Alpha = h.Color.A
+                    },
+                    Motto = h.Motto,
+                    ResidentIds = h.Residents.Select(r => r.Id).ToList()
+                })
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -38,31 +51,26 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseService
         public async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
         {
             var house = await _context.MushroomHouses
-                .AsNoTracking()
-                .FirstOrDefaultAsync(h => h.Id == id);
-
-            return house != null 
-                ? ToDto(house) 
-                : null;
-        }
-
-        private MushroomHouseDto ToDto(MushroomHouse house)
-        {
-            return new MushroomHouseDto
-            {
-                Id = house.Id,
-                Capacity = house.Capacity,
-                Color = new ColorDto
+                .Where(h => h.Id == id)
+                .Select(h => new MushroomHouseDto
                 {
-                    Name = house.Color.Name,
-                    Red = house.Color.R,
-                    Green = house.Color.G,
-                    Blue = house.Color.B,
-                    Alpha = house.Color.A
-                },
-                Motto = house.Motto,
-                ResidentIds = house.Residents.Select(r => r.Id).ToList()
-            };
+                    Id = h.Id,
+                    Capacity = h.Capacity,
+                    Color = new ColorDto
+                    {
+                        Name = h.Color.Name,
+                        Red = h.Color.R,
+                        Green = h.Color.G,
+                        Blue = h.Color.B,
+                        Alpha = h.Color.A
+                    },
+                    Motto = h.Motto,
+                    ResidentIds = h.Residents.Select(r => r.Id).ToList()
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            return house;
         }
     }
 }

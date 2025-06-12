@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
 using Smurf_Village_Statistical_Office.Services.WorkingPlaceService;
 
@@ -16,17 +17,31 @@ namespace Smurf_Village_Statistical_Office.Controllers
         }
 
         [HttpGet("WorkingPlaces")]
-        public async Task<IActionResult> GetWorkingPlaces([FromQuery] WorkingPlaceFilterDto filter)
+        public async Task<IActionResult> List([FromQuery] WorkingPlaceFilterDto filter)
         {
             var workingPlaces = await _workingplaceService.GetAllAsync(filter);
             return Ok(workingPlaces);
         }
 
         [HttpGet("WorkingPlaces/{id}")]
-        public async Task<IActionResult> GetWorkingPlace([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] int id)
         {
             var workingPlace = await _workingplaceService.GetByIdAsnyc(id);
             return workingPlace == null ? NotFound() : Ok(workingPlace);
+        }
+
+        [HttpPost("WorkingPlaces")]
+        public async Task<IActionResult> Create([FromBody] CreateWorkingPlaceDto value)
+        {
+            try
+            {
+                var created = await _workingplaceService.InsertAsync(value);
+                return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

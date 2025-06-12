@@ -2,10 +2,9 @@
 {
     public record ColorDto
     {
-        public required string Name { get; init; }
-        public int Red { get; init; }
-        public int Green { get; init; }
-        public int Blue { get; init; }
-        public int Alpha { get; init; }
+        public required byte Red { get; init; }
+        public required byte Green { get; init; }
+        public required byte Blue { get; init; }
+        public required byte Alpha { get; init; }
     }
 }

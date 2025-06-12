@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
 using Smurf_Village_Statistical_Office.Services;
 using Smurf_Village_Statistical_Office.Services.SmurfExportServices;
@@ -21,21 +22,35 @@ namespace Smurf_Village_Statistical_Office.Controllers
         }
 
         [HttpGet("Smurfs")]
-        public async Task<IActionResult> GetSmurfs([FromQuery] SmurfFilterDto filter)
+        public async Task<IActionResult> List([FromQuery] SmurfFilterDto filter)
         {
             var smurfs = await _smurfService.GetAllAsync(filter);
             return Ok(smurfs);
         }
 
         [HttpGet("Smurfs/{id}")]
-        public async Task<IActionResult> GetSmurf([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] int id)
         {
             var smurf = await _smurfService.GetByIdAsnyc(id);
             return smurf == null ? NotFound() : Ok(smurf);
         }
 
+        [HttpPost("Smurfs")]
+        public async Task<IActionResult> Create([FromBody] CreateSmurfDto value)
+        {
+            try
+            {
+                var created = await _smurfService.InsertAsync(value);
+                return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("Smurfs/actions/export/{type}")]
-        public async Task<IActionResult> ExportSmurfs([FromRoute] string type)
+        public async Task<IActionResult> ExportAll([FromRoute] string type)
         {
             if (string.IsNullOrWhiteSpace(type))
             {
@@ -52,7 +67,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
         }
 
         [HttpGet("Smurfs/{id}/actions/export/{type}")]
-        public async Task<IActionResult> ExportSmurf([FromRoute] int id, [FromRoute] string type)
+        public async Task<IActionResult> Export([FromRoute] int id, [FromRoute] string type)
         {
             if (string.IsNullOrWhiteSpace(type))
             {

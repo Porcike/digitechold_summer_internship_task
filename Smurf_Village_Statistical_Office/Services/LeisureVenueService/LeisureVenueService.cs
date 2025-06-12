@@ -16,7 +16,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueService
             _context = context;
         }
 
-        public async Task<IEnumerable<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter)
+        public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinCapacityProvided = filter.minCapacity == null;
@@ -63,6 +63,56 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueService
                 .FirstOrDefaultAsync();
 
             return venue;
+        }
+
+        public async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
+        {
+            if (value.Capacity < value.MemberIds.Count)
+            {
+                throw new ArgumentException("The capacity is too small!");
+            }
+
+            if (!Enum.IsDefined(typeof(Brand), value.AcceptedBrand))
+            {
+                throw new ArgumentException("Unknown brand!");
+            }
+
+            var members = await _context.Smurfs
+                .Where(s => value.MemberIds.Contains(s.Id))
+                .ToListAsync();
+
+            if(value.MemberIds.Count != members.Count)
+            {
+                throw new ArgumentException("Unknown member!");
+            }
+
+            foreach(var member in members)
+            {
+                if((int)member.FavouriteBrand != value.AcceptedBrand)
+                {
+                    throw new ArgumentException("The venue's accepted brand isn't compatible with the members' favourite brand!");
+                }
+            }
+
+            var venue = new LeisureVenue
+            {
+                Name = value.Name,
+                Capacity = value.Capacity,
+                Members = members,
+                AcceptedBrand = (Brand)value.AcceptedBrand
+            };
+
+            await _context.LeisureVenues.AddAsync(venue);
+            await _context.SaveChangesAsync();
+
+            return new LeisureVenueDto
+            {
+                Id = venue.Id,
+                Name = venue.Name,
+                Capacity = venue.Capacity,
+                AcceptedBrand = venue.AcceptedBrand,
+                MemberIds = venue.Members.Select(m => m.Id).ToList(),
+            };
         }
     }
 }

@@ -4,7 +4,7 @@ using Smurf_Village_Statistical_Office.Models;
 
 namespace Smurf_Village_Statistical_Office.Services.MushroomHouseService
 {
-    public interface IMushroomHouseService : IEntityService<MushroomHouseDto, MushroomHouseFilterDto>
+    public interface IMushroomHouseService : IEntityService<MushroomHouseDto, CreateMushroomHouseDto, MushroomHouseFilterDto>
     {
     }
 }

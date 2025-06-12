@@ -2,6 +2,7 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
+using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
@@ -15,7 +16,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
             _context = context;
         }
 
-        public async Task<IEnumerable<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter)
+        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isEmployeeProvided = string.IsNullOrEmpty(filter.employee);
@@ -56,6 +57,52 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceService
                 .FirstOrDefaultAsync();
 
             return workplace;
+        }
+
+        public async Task<WorkingPlaceDto> InsertAsync(CreateWorkingPlaceDto value)
+        {
+            foreach(var job in value.AcceptedJobs)
+            {
+                if(!Enum.IsDefined(typeof(Job), job))
+                {
+                    throw new ArgumentException("Unknown job!");
+                }
+            }
+
+            var employees = await _context.Smurfs
+                .Where(s => value.EmployeeIds.Contains(s.Id))
+                .ToListAsync();
+
+            if(value.EmployeeIds.Count != employees.Count)
+            {
+                throw new ArgumentException("Unknown employee!");
+            }
+
+            foreach(var employee in employees)
+            {
+                if (!value.AcceptedJobs.Contains((int)employee.Job))
+                {
+                    throw new ArgumentException("The accepted jobs aren't compatible with the employees' qualifications!");
+                }
+            }
+
+            var workplace = new WorkingPlace
+            {
+                Name = value.Name,
+                Employees = employees,
+                AcceptedJobs = value.AcceptedJobs.Select(j => (Job)j).ToList()
+            };
+
+            await _context.WorkingPlaces.AddAsync(workplace);
+            await _context.SaveChangesAsync();
+
+            return new WorkingPlaceDto
+            {
+                Id = workplace.Id,
+                Name = workplace.Name,
+                AcceptedJobs = workplace.AcceptedJobs,
+                EmployeeIds = workplace.Employees.Select(e => e.Id).ToList()
+            };
         }
     }
 }

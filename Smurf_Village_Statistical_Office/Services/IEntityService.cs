@@ -1,10 +1,12 @@
 ﻿namespace Smurf_Village_Statistical_Office.Services
 {
-    public interface IEntityService<TDto, TDtoFilter> 
-        where TDto : class 
-        where TDtoFilter : class
+    public interface IEntityService<Dto, CreateDto, DtoFilter> 
+        where Dto : class 
+        where CreateDto : class
+        where DtoFilter : class
     {
-        Task<IEnumerable<TDto>> GetAllAsync(TDtoFilter filter);
-        Task<TDto?> GetByIdAsnyc(int id);
+        Task<IReadOnlyCollection<Dto>> GetAllAsync(DtoFilter filter);
+        Task<Dto?> GetByIdAsnyc(int id);
+        Task<Dto> InsertAsync(CreateDto value);
     }
 }

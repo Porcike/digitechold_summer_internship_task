@@ -2,7 +2,9 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
+using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
+using System.Drawing;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfService
 {
@@ -15,7 +17,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
             _context = context;
         }
 
-        public async Task<IEnumerable<SmurfDto>> GetAllAsync(SmurfFilterDto filter)
+        public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinAgeProvided = filter.minAge == null;
@@ -48,7 +50,6 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
                     FavouriteBrand = s.FavouriteBrand,
                     FavouriteColor = new ColorDto
                     {
-                        Name = s.FavouriteColor.Name,
                         Red = s.FavouriteColor.R,
                         Green = s.FavouriteColor.G,
                         Blue = s.FavouriteColor.B,
@@ -75,7 +76,6 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
                     FavouriteBrand = s.FavouriteBrand,
                     FavouriteColor = new ColorDto
                     {
-                        Name = s.FavouriteColor.Name,
                         Red = s.FavouriteColor.R,
                         Green = s.FavouriteColor.G,
                         Blue = s.FavouriteColor.B,
@@ -88,5 +88,56 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfService
             return smurf;
         }
 
+        public async Task<SmurfDto> InsertAsync(CreateSmurfDto value)
+        {
+            if(!Enum.IsDefined(typeof(Job), value.Job))
+            {
+                throw new ArgumentException("Unknown job!");
+            }
+
+            if(!Enum.IsDefined(typeof(Food), value.FavouriteFood))
+            {
+                throw new ArgumentException("Unknown food!");
+            }
+
+            if(!Enum.IsDefined(typeof(Brand), value.FavouriteBrand))
+            {
+                throw new ArgumentException("Unknown brand!");
+            }
+
+            var smurf = new Smurf
+            {
+                Name = value.Name,
+                Age = value.Age,
+                Job = (Job)value.Job,
+                FavouriteFood = (Food)value.FavouriteFood,
+                FavouriteBrand = (Brand)value.FavouriteBrand,
+                FavouriteColor = Color.FromArgb(
+                    value.FavouriteColor.Alpha,
+                    value.FavouriteColor.Red,
+                    value.FavouriteColor.Green,
+                    value.FavouriteColor.Blue)
+            };
+
+            await _context.Smurfs.AddAsync(smurf);
+            await _context.SaveChangesAsync();
+
+            return new SmurfDto
+            {
+                Id = smurf.Id,
+                Name = smurf.Name,
+                Age = smurf.Age,
+                Job = smurf.Job,
+                FavouriteFood = smurf.FavouriteFood,
+                FavouriteBrand = smurf.FavouriteBrand,
+                FavouriteColor = new ColorDto 
+                {
+                    Red = smurf.FavouriteColor.R,
+                    Green = smurf.FavouriteColor.G,
+                    Blue = smurf.FavouriteColor.B,
+                    Alpha = smurf.FavouriteColor.A
+                }
+            };
+        }
     }
 }

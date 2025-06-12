@@ -1,4 +1,5 @@
 ﻿using Smurf_Village_Statistical_Office.Utils;
+using System.ComponentModel.DataAnnotations;
 
 namespace Smurf_Village_Statistical_Office.DTO
 {

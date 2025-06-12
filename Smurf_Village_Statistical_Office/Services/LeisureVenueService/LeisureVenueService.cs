@@ -2,9 +2,10 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO;
 using Smurf_Village_Statistical_Office.DTO.Filters;
+using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
 
-namespace Smurf_Village_Statistical_Office.Services
+namespace Smurf_Village_Statistical_Office.Services.LeisureVenueService
 {
     public class LeisureVenueService : ILeisureVenueService
     {
@@ -31,15 +32,8 @@ namespace Smurf_Village_Statistical_Office.Services
                     (isMinCapacityProvided || v.Capacity >= filter.minCapacity) &&
                     (isMaxCapacityProvided || v.Capacity <= filter.maxCapacity) &&
                     (isMemberProvided || v.Members.Any(m => EF.Functions.Like(m.Name, filter.member))) &&
-                    (isBrandProvided || (brandParseWasSuccessful && v.AcceptedBrand == parsedBrand)))
-                .Select(v => new LeisureVenueDto
-                {
-                    Id = v.Id,
-                    Name = v.Name,
-                    Capacity = v.Capacity,
-                    AcceptedBrand = v.AcceptedBrand,
-                    MemberIds = v.Members.Select(m => m.Id).ToList()
-                })
+                    (isBrandProvided || brandParseWasSuccessful && v.AcceptedBrand == parsedBrand))
+                .Select(venue => ToDto(venue))
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -49,19 +43,24 @@ namespace Smurf_Village_Statistical_Office.Services
         public async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
         {
             var venue = await _context.LeisureVenues
-                .Where(v => v.Id == id)
-                .Select(v => new LeisureVenueDto
-                {
-                    Id = v.Id,
-                    Name = v.Name,
-                    Capacity = v.Capacity,
-                    AcceptedBrand = v.AcceptedBrand,
-                    MemberIds = v.Members.Select(m => m.Id).ToList()
-                })
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(v => v.Id == id);
 
-            return venue;
+            return venue != null 
+                ? ToDto(venue) 
+                : null;
+        }
+
+        private LeisureVenueDto ToDto(LeisureVenue venue)
+        {
+            return new LeisureVenueDto
+            {
+                Id = venue.Id,
+                Name = venue.Name,
+                Capacity = venue.Capacity,
+                AcceptedBrand = venue.AcceptedBrand,
+                MemberIds = venue.Members.Select(m => m.Id).ToList()
+            };
         }
     }
 }

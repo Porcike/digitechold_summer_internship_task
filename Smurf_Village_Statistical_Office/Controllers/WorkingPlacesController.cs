@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Services;
+using Smurf_Village_Statistical_Office.Services.WorkingPlaceService;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {

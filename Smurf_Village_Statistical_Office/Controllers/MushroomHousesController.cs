@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Smurf_Village_Statistical_Office.DTO;
-using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Services.MushroomHouseService;
+using Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos;
+using Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {
@@ -41,6 +40,24 @@ namespace Smurf_Village_Statistical_Office.Controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("MushroomHouses")]
+        public async Task<IActionResult> Update([FromBody] UpdateMushroomHouseDto value)
+        {
+            try
+            {
+                await _mushroomService.UpdateAsync(value);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
             }
         }
     }

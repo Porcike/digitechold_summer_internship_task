@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Smurf_Village_Statistical_Office.DTO;
-using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Services;
-using Smurf_Village_Statistical_Office.Services.SmurfExportServices;
-using Smurf_Village_Statistical_Office.Services.SmurfService;
+using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
+using Smurf_Village_Statistical_Office.Services.General;
+using Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies;
+using Smurf_Village_Statistical_Office.Services.SmurfServices.General;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {
@@ -46,6 +45,24 @@ namespace Smurf_Village_Statistical_Office.Controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("Smurfs")]
+        public async Task<IActionResult> Update([FromBody] UpdateSmurfDto value)
+        {
+            try
+            {
+                await _smurfService.UpdateAsync(value);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
             }
         }
 

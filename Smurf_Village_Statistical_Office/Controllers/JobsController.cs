@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.Data;
-using Smurf_Village_Statistical_Office.DTO;
+using Smurf_Village_Statistical_Office.DTO.JobDtos;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Controllers

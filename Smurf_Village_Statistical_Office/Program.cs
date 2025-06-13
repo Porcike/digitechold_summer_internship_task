@@ -1,12 +1,12 @@
 
 using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
-using Smurf_Village_Statistical_Office.Services;
-using Smurf_Village_Statistical_Office.Services.LeisureVenueService;
-using Smurf_Village_Statistical_Office.Services.MushroomHouseService;
-using Smurf_Village_Statistical_Office.Services.SmurfExportServices;
-using Smurf_Village_Statistical_Office.Services.SmurfService;
-using Smurf_Village_Statistical_Office.Services.WorkingPlaceService;
+using Smurf_Village_Statistical_Office.Services.General;
+using Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General;
+using Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General;
+using Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies;
+using Smurf_Village_Statistical_Office.Services.SmurfServices.General;
+using Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General;
 
 namespace Smurf_Village_Statistical_Office
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Smurf_Village_Statistical_Office.DTO;
-using Smurf_Village_Statistical_Office.DTO.Filters;
-using Smurf_Village_Statistical_Office.Services.LeisureVenueService;
+using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
+using Smurf_Village_Statistical_Office.DTO.WorkingPlaceDtos;
+using Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {
@@ -41,6 +41,24 @@ namespace Smurf_Village_Statistical_Office.Controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("LeisureVenues")]
+        public async Task<IActionResult> Update([FromBody] UpdateLeisureVenueDto value)
+        {
+            try
+            {
+                await _leisureVenueService.UpdateAsync(value);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
             }
         }
     }

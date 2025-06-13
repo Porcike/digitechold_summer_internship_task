@@ -6,14 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class MushroomHousesController : ControllerBase
+    public class MushroomHousesController(IMushroomHouseService mushroomService) : ControllerBase
     {
-        private readonly IMushroomHouseService _mushroomService;
-
-        public MushroomHousesController(IMushroomHouseService mushroomService)
-        {
-            _mushroomService = mushroomService;
-        }
+        private readonly IMushroomHouseService _mushroomService = mushroomService;
 
         [HttpGet("MushroomHouses")]
         public async Task<IActionResult> List([FromQuery] MushroomHouseFilterDto filter)
@@ -49,13 +44,31 @@ namespace Smurf_Village_Statistical_Office.Controllers
             try
             {
                 await _mushroomService.UpdateAsync(value);
-                return Ok();
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
             catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("MushroomHouses/{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            try
+            {
+                await _mushroomService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }

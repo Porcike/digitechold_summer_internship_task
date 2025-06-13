@@ -2,16 +2,11 @@
 
 namespace Smurf_Village_Statistical_Office.Services.General
 {
-    public class ExportService<T> where T: IEntityExportStrategy
+    public class ExportService<T>(IEnumerable<T> smurfsExportStrategies) where T: IEntityExportStrategy
     {
-        private readonly IDictionary<string, T> _smurfsExportStrategies;
-
-        public ExportService(IEnumerable<T> smurfsExportStrategies)
-        {
-            _smurfsExportStrategies = smurfsExportStrategies.ToDictionary(
+        private readonly IDictionary<string, T> _smurfsExportStrategies = smurfsExportStrategies.ToDictionary(
                 s => s.GetType().Name.Replace("ExportSmurfsStrategy", "").ToLower(),
                 s => s);
-        }
 
         public async Task<ExportStatus> ExportAllAsync(string type)
         {

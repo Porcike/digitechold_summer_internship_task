@@ -7,14 +7,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class BrandsController : ControllerBase
+    public class BrandsController(SmurfVillageContext context) : ControllerBase
     {
-        private readonly SmurfVillageContext _context;
-
-        public BrandsController(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         [HttpGet]
         [Route("Brands")]

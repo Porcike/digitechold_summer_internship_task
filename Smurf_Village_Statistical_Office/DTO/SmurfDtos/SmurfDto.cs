@@ -1,5 +1,6 @@
-﻿using Smurf_Village_Statistical_Office.DTO.ColorDtos;
-using Smurf_Village_Statistical_Office.Utils;
+﻿using Smurf_Village_Statistical_Office.Utils;
+using System.Drawing;
+
 namespace Smurf_Village_Statistical_Office.DTO.SmurfDtos
 {
     public record SmurfDto
@@ -10,6 +11,6 @@ namespace Smurf_Village_Statistical_Office.DTO.SmurfDtos
         public required Job Job { get; init; }
         public required Food FavouriteFood { get; init; }
         public required Brand FavouriteBrand { get; init; }
-        public required ColorDto FavouriteColor { get; init; }
+        public required Color FavouriteColor { get; init; }
     }
 }

@@ -3,6 +3,7 @@
     public interface IEntityService<Dto, CreateDto, UpdateDto, DtoFilter> 
         where Dto : class 
         where CreateDto : class
+        where UpdateDto : class
         where DtoFilter : class
     {
         Task<IReadOnlyCollection<Dto>> GetAllAsync(DtoFilter filter);

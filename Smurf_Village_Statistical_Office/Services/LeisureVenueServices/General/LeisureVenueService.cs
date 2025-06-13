@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.Formatters.Xml;
+using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
 using Smurf_Village_Statistical_Office.Models;
@@ -6,14 +7,9 @@ using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 {
-    public class LeisureVenueService : ILeisureVenueService
+    public class LeisureVenueService(SmurfVillageContext context) : ILeisureVenueService
     {
-        private readonly SmurfVillageContext _context;
-
-        public LeisureVenueService(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter)
         {
@@ -120,6 +116,29 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             venue.Members = members;
             venue.AcceptedBrand = (Brand)value.AcceptedBrand;
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var venueExists = await _context.LeisureVenues.AnyAsync(v => v.Id == id);
+            if (!venueExists)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            var hasMembers = await _context.LeisureVenues
+                .Where(l => l.Id == id)
+                .SelectMany(l => l.Members)
+                .AnyAsync();
+
+            if (hasMembers)
+            {
+                throw new ArgumentException("This venue still has members!");
+            }
+
+            var venue = await _context.LeisureVenues.FirstAsync(v => v.Id == id);
+            _context.LeisureVenues.Remove(venue);
             await _context.SaveChangesAsync();
         }
 

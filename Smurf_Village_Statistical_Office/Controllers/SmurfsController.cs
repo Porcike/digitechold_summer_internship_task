@@ -8,17 +8,13 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class SmurfsController : ControllerBase
+    public class SmurfsController(
+        ISmurfService smurfService, 
+        ExportService<ISmurfsExportStrategy> exportService) : ControllerBase
     {
-        private readonly ISmurfService _smurfService;
+        private readonly ISmurfService _smurfService = smurfService;
 
-        private readonly ExportService<ISmurfsExportStrategy> _exportService;
-
-        public SmurfsController(ISmurfService smurfService, ExportService<ISmurfsExportStrategy> exportService)
-        {
-            _smurfService = smurfService;
-            _exportService = exportService;
-        }
+        private readonly ExportService<ISmurfsExportStrategy> _exportService = exportService;
 
         [HttpGet("Smurfs")]
         public async Task<IActionResult> List([FromQuery] SmurfFilterDto filter)
@@ -54,11 +50,25 @@ namespace Smurf_Village_Statistical_Office.Controllers
             try
             {
                 await _smurfService.UpdateAsync(value);
-                return Ok();
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("Smurfs/{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            try
+            {
+                await _smurfService.DeleteAsync(id);
+                return NoContent();
             }
             catch (InvalidOperationException)
             {

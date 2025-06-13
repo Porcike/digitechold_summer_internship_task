@@ -6,14 +6,9 @@ using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 {
-    public class WorkingPlaceService : IWorkingPlaceService
+    public class WorkingPlaceService(SmurfVillageContext context) : IWorkingPlaceService
     {
-        private readonly SmurfVillageContext _context;
-
-        public WorkingPlaceService(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter)
         {
@@ -97,11 +92,9 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                 throw new ArgumentException(message);
             }
 
-            var workplace = await _context.WorkingPlaces.FirstAsync(w => w.Id == value.Id);
-
-            await _context.Entry(workplace)
-                .Collection(w => w.Employees)
-                .LoadAsync();
+            var workplace = await _context.WorkingPlaces
+                .Include(w => w.Employees)
+                .FirstAsync(w => w.Id == value.Id);
 
             var employees = await _context.Smurfs
                 .Where(s => value.EmployeeIds.Contains(s.Id))
@@ -111,6 +104,29 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
             workplace.Employees = employees;
             workplace.AcceptedJobs = value.AcceptedJobs.Select(j => (Job)j).ToList();
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var workplaceExist = await _context.WorkingPlaces.AnyAsync(w => w.Id == id);
+            if (!workplaceExist)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            var hasEmployees = await _context.WorkingPlaces
+                .Where(w => w.Id == id)
+                .SelectMany(w => w.Employees)
+                .AnyAsync();
+
+            if (hasEmployees)
+            {
+                throw new ArgumentException("This workplace still has employees!");
+            }
+
+            var workplace = await _context.WorkingPlaces.FirstAsync(w => w.Id == id);
+            _context.WorkingPlaces.Remove(workplace);
             await _context.SaveChangesAsync();
         }
 

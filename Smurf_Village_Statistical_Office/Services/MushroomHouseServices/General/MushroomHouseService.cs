@@ -1,21 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
-using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 using Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos;
 using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
-using System.Drawing;
 
 namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General
 {
-    public class MushroomHouseService : IMushroomHouseService
+    public class MushroomHouseService(SmurfVillageContext context) : IMushroomHouseService
     {
-        private readonly SmurfVillageContext _context;
-
-        public MushroomHouseService(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         public async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(MushroomHouseFilterDto filter)
         {
@@ -34,13 +27,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 {
                     Id = h.Id,
                     Capacity = h.Capacity,
-                    Color = new ColorDto
-                    {
-                        Red = h.Color.R,
-                        Green = h.Color.G,
-                        Blue = h.Color.B,
-                        Alpha = h.Color.A
-                    },
+                    Color = h.Color,
                     Motto = h.Motto,
                     ResidentIds = h.Residents.Select(r => r.Id).ToList(),
                     AcceptedFoods = h.AcceptedFoods
@@ -59,13 +46,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 {
                     Id = h.Id,
                     Capacity = h.Capacity,
-                    Color = new ColorDto
-                    {
-                        Red = h.Color.R,
-                        Green = h.Color.G,
-                        Blue = h.Color.B,
-                        Alpha = h.Color.A
-                    },
+                    Color = h.Color,
                     Motto = h.Motto,
                     ResidentIds = h.Residents.Select(r => r.Id).ToList(),
                     AcceptedFoods = h.AcceptedFoods
@@ -88,18 +69,12 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 .Where(s => value.ResidentIds.Contains(s.Id))
                 .ToListAsync();
 
-            var houseColor = Color.FromArgb(
-                value.Color.Alpha,
-                value.Color.Red,
-                value.Color.Green,
-                value.Color.Blue);
-
             var house = new MushroomHouse
             {
                 Residents = residents,
                 Capacity = value.Capacity,
                 AcceptedFoods = value.AcceptedFoods.Select(f => (Food)f).ToList(),
-                Color = houseColor,
+                Color = value.Color,
                 Motto = value.Motto,
             };
 
@@ -110,13 +85,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
             {
                 Id = house.Id,
                 Capacity = house.Capacity,
-                Color = new ColorDto 
-                {
-                    Red = house.Color.R,
-                    Green = house.Color.G,
-                    Blue = house.Color.B,
-                    Alpha = house.Color.A
-                },
+                Color = house.Color,
                 Motto = house.Motto,
                 ResidentIds = house.Residents.Select(r => r.Id).ToList(),
                 AcceptedFoods = house.AcceptedFoods
@@ -141,18 +110,35 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 .Where(s => value.ResidentIds.Contains(s.Id))
                 .ToListAsync();
 
-            var houseColor = Color.FromArgb(
-                value.Color.Alpha,
-                value.Color.Red,
-                value.Color.Green,
-                value.Color.Blue);
-
             house.Residents = residents;
             house.Capacity = value.Capacity;
             house.AcceptedFoods = value.AcceptedFoods.Select(f => (Food)f).ToList();
-            house.Color = houseColor;
+            house.Color = value.Color;
             house.Motto = value.Motto;
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var houseExists = await _context.MushroomHouses.AnyAsync(h => h.Id == id);
+            if (!houseExists)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            var hasResidents = await _context.MushroomHouses
+                .Where(h => h.Id == id)
+                .SelectMany(h => h.Residents)
+                .AnyAsync();
+
+            if (hasResidents)
+            {
+                throw new ArgumentException("This house has residents in it!");
+            }
+
+            var house = await _context.MushroomHouses.FirstAsync(h => h.Id == id);
+            _context.MushroomHouses.Remove(house);
             await _context.SaveChangesAsync();
         }
 
@@ -171,16 +157,10 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 return (false, "Unknown resident!");
             }
 
-            var houseColor = Color.FromArgb(
-                value.Color.Alpha,
-                value.Color.Red,
-                value.Color.Green,
-                value.Color.Blue);
-
             var isHouseColorIncompatible = await _context.Smurfs
                 .AnyAsync(s =>
                     value.ResidentIds.Contains(s.Id) &&
-                    s.FavouriteColor.ToArgb() == houseColor.ToArgb());
+                    s.FavouriteColor.ToArgb() == value.Color.ToArgb());
 
             if (isHouseColorIncompatible)
             {

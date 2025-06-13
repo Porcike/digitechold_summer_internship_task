@@ -1,21 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
-using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
 using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
-using System.Drawing;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 {
-    public class SmurfService : ISmurfService
+    public class SmurfService(SmurfVillageContext context) : ISmurfService
     {
-        private readonly SmurfVillageContext _context;
-
-        public SmurfService(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter)
         {
@@ -48,13 +41,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                     Job = s.Job,
                     FavouriteFood = s.FavouriteFood,
                     FavouriteBrand = s.FavouriteBrand,
-                    FavouriteColor = new ColorDto
-                    {
-                        Red = s.FavouriteColor.R,
-                        Green = s.FavouriteColor.G,
-                        Blue = s.FavouriteColor.B,
-                        Alpha = s.FavouriteColor.A
-                    }
+                    FavouriteColor = s.FavouriteColor
                 })
                 .AsNoTracking()
                 .ToListAsync();
@@ -74,13 +61,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                     Job = s.Job,
                     FavouriteFood = s.FavouriteFood,
                     FavouriteBrand = s.FavouriteBrand,
-                    FavouriteColor = new ColorDto
-                    {
-                        Red = s.FavouriteColor.R,
-                        Green = s.FavouriteColor.G,
-                        Blue = s.FavouriteColor.B,
-                        Alpha = s.FavouriteColor.A
-                    }
+                    FavouriteColor = s.FavouriteColor
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
@@ -102,11 +83,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 Job = (Job)value.Job,
                 FavouriteFood = (Food)value.FavouriteFood,
                 FavouriteBrand = (Brand)value.FavouriteBrand,
-                FavouriteColor = Color.FromArgb(
-                    value.FavouriteColor.Alpha,
-                    value.FavouriteColor.Red,
-                    value.FavouriteColor.Green,
-                    value.FavouriteColor.Blue)
+                FavouriteColor = value.FavouriteColor
             };
 
             await _context.Smurfs.AddAsync(smurf);
@@ -120,13 +97,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 Job = smurf.Job,
                 FavouriteFood = smurf.FavouriteFood,
                 FavouriteBrand = smurf.FavouriteBrand,
-                FavouriteColor = new ColorDto 
-                {
-                    Red = smurf.FavouriteColor.R,
-                    Green = smurf.FavouriteColor.G,
-                    Blue = smurf.FavouriteColor.B,
-                    Alpha = smurf.FavouriteColor.A
-                }
+                FavouriteColor = smurf.FavouriteColor
             };
         }
 
@@ -149,16 +120,10 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 throw new ArgumentException("The new job isn't compatible with the existing workplaces!");
             }
 
-            var favouriteColor = Color.FromArgb(
-                value.FavouriteColor.Alpha,
-                value.FavouriteColor.Red,
-                value.FavouriteColor.Green,
-                value.FavouriteColor.Blue);
-
             var isIncompatibleWithHouses = await _context.MushroomHouses
                 .AnyAsync(m =>
                     m.Residents.Any(r => r.Id == value.Id) &&
-                    m.Color.ToArgb() == favouriteColor.ToArgb());
+                    m.Color.ToArgb() == value.FavouriteColor.ToArgb());
 
             if(isIncompatibleWithHouses)
             {
@@ -180,8 +145,15 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             smurf.Job = (Job)value.Job;
             smurf.FavouriteFood = (Food)value.FavouriteFood;
             smurf.FavouriteBrand = (Brand)value.FavouriteBrand;
-            smurf.FavouriteColor = favouriteColor;
+            smurf.FavouriteColor = value.FavouriteColor;
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var smurf = await _context.Smurfs.FirstAsync(s => s.Id == id);
+            _context.Smurfs.Remove(smurf);
             await _context.SaveChangesAsync();
         }
 

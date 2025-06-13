@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
-using Smurf_Village_Statistical_Office.DTO.WorkingPlaceDtos;
 using Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class LeisureVenuesController : ControllerBase
+    public class LeisureVenuesController(ILeisureVenueService leisureVenueService) : ControllerBase
     {
-        private readonly ILeisureVenueService _leisureVenueService;
-
-        public LeisureVenuesController(ILeisureVenueService leisureVenueService)
-        {
-            _leisureVenueService = leisureVenueService;
-        }
+        private readonly ILeisureVenueService _leisureVenueService = leisureVenueService;
 
         [HttpGet("LeisureVenues")]
         public async Task<IActionResult> List([FromQuery] LeisureVenueFilterDto filter)
@@ -50,13 +44,31 @@ namespace Smurf_Village_Statistical_Office.Controllers
             try
             {
                 await _leisureVenueService.UpdateAsync(value);
-                return Ok();
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
             catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("LeisureVenues/{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            try
+            {
+                await _leisureVenueService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos;
 using Smurf_Village_Statistical_Office.DTO.WorkingPlaceDtos;
 using Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General;
 
@@ -7,14 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class WorkingPlacesController : ControllerBase
+    public class WorkingPlacesController(IWorkingPlaceService workingPlaceService) : ControllerBase
     {
-        private readonly IWorkingPlaceService _workingplaceService;
-
-        public WorkingPlacesController(IWorkingPlaceService workingPlaceService)
-        {
-            _workingplaceService = workingPlaceService;
-        }
+        private readonly IWorkingPlaceService _workingplaceService = workingPlaceService;
 
         [HttpGet("WorkingPlaces")]
         public async Task<IActionResult> List([FromQuery] WorkingPlaceFilterDto filter)
@@ -29,6 +23,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
             var workingPlace = await _workingplaceService.GetByIdAsnyc(id);
             return workingPlace == null ? NotFound() : Ok(workingPlace);
         }
+
 
         [HttpPost("WorkingPlaces")]
         public async Task<IActionResult> Create([FromBody] CreateWorkingPlaceDto value)
@@ -50,13 +45,31 @@ namespace Smurf_Village_Statistical_Office.Controllers
             try
             {
                 await _workingplaceService.UpdateAsync(value);
-                return Ok();
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
             catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("WorkingPlaces/{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            try
+            {
+                await _workingplaceService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }

@@ -34,7 +34,10 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new 
+                {
+                    message = ex.Message,
+                });
             }
         }
 
@@ -48,9 +51,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                });
             }
-            catch (InvalidOperationException)
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
@@ -64,13 +70,57 @@ namespace Smurf_Village_Statistical_Office.Controllers
                 await _leisureVenueService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (ArgumentException ex)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return Conflict(new 
+                {
+                    message = ex.Message
+                });
             }
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+        }
+
+        [HttpPost("LeisureVenues/{id}/members/{memberId}")]
+        public async Task<IActionResult> AddMember([FromRoute] int id, [FromRoute] int memberId)
+        {
+            try
+            {
+                await _leisureVenueService.AddMemberAsync(id, memberId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpDelete("LeisureVenues/{id}/members/{memberId}")]
+        public async Task<IActionResult> RemoveMember([FromRoute] int id, [FromRoute] int memberId)
+        {
+            try
+            {
+                await _leisureVenueService.RemoveMemberAsync(id, memberId);
+                return NoContent();
+            }
+            catch(KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
     }

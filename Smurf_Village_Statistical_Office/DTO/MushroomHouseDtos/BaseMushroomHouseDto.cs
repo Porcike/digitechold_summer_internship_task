@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+﻿using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 
 namespace Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos
 {
@@ -8,7 +8,7 @@ namespace Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos
         public string Motto { get; init; } = string.Empty;
         public List<int> ResidentIds { get; init; } = new List<int>();
         public List<int> AcceptedFoods { get; init; } = new List<int>();
-        public Color Color { get; init; }
+        public ColorDto Color { get; init; } = new ColorDto();
 
     }
 }

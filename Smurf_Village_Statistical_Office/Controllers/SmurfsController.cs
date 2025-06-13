@@ -56,7 +56,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException)
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
@@ -70,7 +70,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
                 await _smurfService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (InvalidOperationException)
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
@@ -79,35 +79,42 @@ namespace Smurf_Village_Statistical_Office.Controllers
         [HttpGet("Smurfs/actions/export/{type}")]
         public async Task<IActionResult> ExportAll([FromRoute] string type)
         {
-            if (string.IsNullOrWhiteSpace(type))
+            try
             {
-                BadRequest("The export type is missing!");
+                var (bytes, contentType, fileName) = await _exportService.ExportAllAsync(type);
+                return File(bytes, contentType, fileName);
             }
-
-            var exportStatus = await _exportService.ExportAllAsync(type);
-
-            return exportStatus.Bytes == null 
-                || exportStatus.ContentType == null 
-                || exportStatus.FileName == null
-                ? BadRequest("Unknown export type!")
-                : File(exportStatus.Bytes, exportStatus.ContentType, exportStatus.FileName);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet("Smurfs/{id}/actions/export/{type}")]
         public async Task<IActionResult> Export([FromRoute] int id, [FromRoute] string type)
         {
-            if (string.IsNullOrWhiteSpace(type))
+            try
             {
-                BadRequest("The export type is missing!");
+                var (bytes, contentType, fileName) = await _exportService.ExportByIdAsync(id, type);
+                return File(bytes, contentType, fileName);
             }
-
-            var exportStatus = await _exportService.ExportByIdAsync(id, type);
-
-            return exportStatus.Bytes == null 
-                || exportStatus.ContentType == null 
-                || exportStatus.FileName == null
-                ? exportStatus.TypeNotFound ? BadRequest("Unknown export type!") : NotFound()
-                : File(exportStatus.Bytes, exportStatus.ContentType, exportStatus.FileName);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException)
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }

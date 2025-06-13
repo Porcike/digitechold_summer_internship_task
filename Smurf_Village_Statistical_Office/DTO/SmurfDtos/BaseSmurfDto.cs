@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+﻿using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 
 namespace Smurf_Village_Statistical_Office.DTO.SmurfDtos
 {
@@ -9,6 +9,6 @@ namespace Smurf_Village_Statistical_Office.DTO.SmurfDtos
         public int Job { get; init; }
         public int FavouriteFood { get; init; }
         public int FavouriteBrand { get; init; }
-        public Color FavouriteColor { get; init; }
+        public ColorDto FavouriteColor { get; init; } = new ColorDto();
     }
 }

@@ -94,7 +94,12 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             var workplace = await _context.WorkingPlaces
                 .Include(w => w.Employees)
-                .FirstAsync(w => w.Id == value.Id);
+                .FirstOrDefaultAsync(w => w.Id == value.Id);
+
+            if(workplace == null)
+            {
+                throw new KeyNotFoundException();
+            }
 
             var employees = await _context.Smurfs
                 .Where(s => value.EmployeeIds.Contains(s.Id))

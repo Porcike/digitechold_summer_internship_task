@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters.Xml;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
 using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Utils;
+using System.Data;
 
 namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 {
@@ -101,7 +101,11 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                 throw new ArgumentException(message);
             }
 
-            var venue = await _context.LeisureVenues.FirstAsync(v => v.Id == value.Id);
+            var venue = await _context.LeisureVenues.FindAsync(value.Id);
+            if (venue == null)
+            {
+                throw new KeyNotFoundException();
+            }
 
             await _context.Entry(venue)
                 .Collection(v => v.Members)
@@ -121,8 +125,8 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
         public async Task DeleteAsync(int id)
         {
-            var venueExists = await _context.LeisureVenues.AnyAsync(v => v.Id == id);
-            if (!venueExists)
+            var venue = await _context.LeisureVenues.FindAsync(id);
+            if (venue == null)
             {
                 throw new KeyNotFoundException();
             }
@@ -130,15 +134,76 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             var hasMembers = await _context.LeisureVenues
                 .Where(l => l.Id == id)
                 .SelectMany(l => l.Members)
+                .AsNoTracking()
                 .AnyAsync();
 
             if (hasMembers)
             {
-                throw new ArgumentException("This venue still has members!");
+                throw new InvalidOperationException("This venue still has members!");
+            }
+ 
+            _context.LeisureVenues.Remove(venue);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddMemberAsync(int id, int memberId)
+        {
+            var venue = await _context.LeisureVenues.FindAsync(id);
+            if (venue == null)
+            {
+                throw new KeyNotFoundException("Unknown venue!");
             }
 
-            var venue = await _context.LeisureVenues.FirstAsync(v => v.Id == id);
-            _context.LeisureVenues.Remove(venue);
+            var member = await _context.Smurfs.FindAsync(memberId);
+            if (member == null)
+            {
+                throw new KeyNotFoundException("Unknown smurf!");
+            }
+
+            if (venue.AcceptedBrand != member.FavouriteBrand)
+            {
+                throw new InvalidOperationException("The accepted brand isn't compatible with the smurf's favourite brand!");
+            }
+
+            if (venue.Members.Contains(member))
+            {
+                throw new InvalidOperationException("This smurf is already a member!");
+            }
+
+            var memberCount = _context.LeisureVenues
+                .Where(l => l.Id == id)
+                .Select(l => l.Members.Count)
+                .First();
+
+            if (memberCount + 1 > venue.Capacity)
+            {
+                throw new InvalidOperationException("The venue can't take any more members!");
+            }
+
+            venue.Members.Add(member);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveMemberAsync(int id, int memberId)
+        {
+            var venue = await _context.LeisureVenues.FindAsync(id);
+            if (venue == null)
+            {
+                throw new KeyNotFoundException("Unknown venue!");
+            }
+
+            var member = await _context.Smurfs.FindAsync(memberId);
+            if (member == null)
+            {
+                throw new KeyNotFoundException("Unknown smurf!");
+            }
+
+            if (!venue.Members.Contains(member))
+            {
+                throw new KeyNotFoundException("This smurf is not a member!");
+            }
+
+            venue.Members.Remove(member);
             await _context.SaveChangesAsync();
         }
 
@@ -169,7 +234,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             if (isBrandIncompatible)
             {
-                return (false, "The venue's accepted brand isn't compatible with the members' favourite brand!");
+                return (false, "The accepted brand isn't compatible with the members' favourite brand!");
             }
 
             return (true, null);

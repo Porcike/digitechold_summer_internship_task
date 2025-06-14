@@ -6,7 +6,7 @@
         where TUpdateDto : class
         where TDtoFilter : class
     {
-        Task<IReadOnlyCollection<TDto>> GetAllAsync(TDtoFilter filter);
+        Task<IReadOnlyCollection<TDto>> GetAllAsync(TDtoFilter filter, int page, int pageSize);
         Task<TDto?> GetByIdAsnyc(int id);
         Task<TDto> InsertAsync(TCreateDto value);
         Task UpdateAsync(TUpdateDto value);

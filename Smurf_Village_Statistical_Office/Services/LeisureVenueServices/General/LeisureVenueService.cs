@@ -11,7 +11,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
     {
         private readonly SmurfVillageContext _context = context;
 
-        public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter)
+        public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter, int page, int pageSize)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinCapacityProvided = filter.minCapacity == null;
@@ -21,13 +21,18 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             var brandParseWasSuccessful = Enum.TryParse(filter.brand, true, out Brand parsedBrand);
 
+            pageSize = Math.Min(pageSize, 100);
+
             var venues = await _context.LeisureVenues
+                .AsNoTracking()
                 .Where(v =>
                     (isNameProvided || EF.Functions.Like(v.Name, filter.name)) &&
                     (isMinCapacityProvided || v.Capacity >= filter.minCapacity) &&
                     (isMaxCapacityProvided || v.Capacity <= filter.maxCapacity) &&
                     (isMemberProvided || v.Members.Any(m => EF.Functions.Like(m.Name, filter.member))) &&
                     (isBrandProvided || brandParseWasSuccessful && v.AcceptedBrand == parsedBrand))
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(v => new LeisureVenueDto
                 {
                     Id = v.Id,
@@ -36,7 +41,6 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                     AcceptedBrand = v.AcceptedBrand,
                     MemberIds = v.Members.Select(m => m.Id).ToList()
                 })
-                .AsNoTracking()
                 .ToListAsync();
 
             return venues;
@@ -45,6 +49,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
         public async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
         {
             var venue = await _context.LeisureVenues
+                .AsNoTracking()
                 .Where(v => v.Id == id)
                 .Select(v => new LeisureVenueDto
                 {
@@ -54,7 +59,6 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                     AcceptedBrand = v.AcceptedBrand,
                     MemberIds = v.Members.Select(m => m.Id).ToList()
                 })
-                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             return venue;

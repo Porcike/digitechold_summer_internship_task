@@ -11,9 +11,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
         private readonly ILeisureVenueService _leisureVenueService = leisureVenueService;
 
         [HttpGet("LeisureVenues")]
-        public async Task<IActionResult> List([FromQuery] LeisureVenueFilterDto filter)
+        public async Task<IActionResult> List([FromQuery] LeisureVenueFilterDto filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var venues = await _leisureVenueService.GetAllAsync(filter);
+            var venues = await _leisureVenueService.GetAllAsync(filter, page, pageSize);
             return Ok(venues);
         }
 

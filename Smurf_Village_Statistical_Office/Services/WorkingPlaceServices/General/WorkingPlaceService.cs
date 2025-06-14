@@ -10,7 +10,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
     {
         private readonly SmurfVillageContext _context = context;
 
-        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter)
+        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter, int page, int pageSize)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isEmployeeProvided = string.IsNullOrEmpty(filter.employee);
@@ -18,11 +18,16 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             var jobParseWasSuccessFul = Enum.TryParse(filter.acceptedJob, true, out Job parsedJob);
 
+            pageSize = Math.Min(pageSize, 100);
+
             var workplaces = await _context.WorkingPlaces
+                .AsNoTracking()
                 .Where(w =>
                     (isNameProvided || EF.Functions.Like(w.Name, filter.name)) &&
                     (isEmployeeProvided || w.Employees.Any(e => EF.Functions.Like(e.Name, filter.employee))) &&
                     (isJobProvided || jobParseWasSuccessFul && w.AcceptedJobs.Contains(parsedJob)))
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(w => new WorkingPlaceDto
                 {
                     Id = w.Id,
@@ -30,7 +35,6 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                     AcceptedJobs = w.AcceptedJobs,
                     EmployeeIds = w.Employees.Select(e => e.Id).ToList()
                 })
-                .AsNoTracking()
                 .ToListAsync();
 
             return workplaces;
@@ -39,6 +43,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
         public async Task<WorkingPlaceDto?> GetByIdAsnyc(int id)
         {
             var workplace = await _context.WorkingPlaces
+                .AsNoTracking()
                 .Where(w => w.Id == id)
                 .Select(w => new WorkingPlaceDto
                 {
@@ -47,7 +52,6 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                     AcceptedJobs = w.AcceptedJobs,
                     EmployeeIds = w.Employees.Select(e => e.Id).ToList()
                 })
-                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             return workplace;

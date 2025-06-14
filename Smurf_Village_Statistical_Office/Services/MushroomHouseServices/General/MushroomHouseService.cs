@@ -11,19 +11,24 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
     {
         private readonly SmurfVillageContext _context = context;
 
-        public async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(MushroomHouseFilterDto filter)
+        public async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(MushroomHouseFilterDto filter, int page, int pageSize)
         {
             var isResidentProvided = string.IsNullOrEmpty(filter.resident);
             var isMinCapacityProvided = filter.minCapacity == null;
             var isMaxCapacityProvided = filter.maxCapacity == null;
             var isColorProvided = string.IsNullOrEmpty(filter.color);
 
+            pageSize = Math.Min(pageSize, 100);
+
             var houses = await _context.MushroomHouses
+                .AsNoTracking()
                 .Where(h =>
                     (isResidentProvided || h.Residents.Any(s => EF.Functions.Like(s.Name, filter.resident))) &&
                     (isMinCapacityProvided || h.Capacity >= filter.minCapacity) &&
                     (isMaxCapacityProvided || h.Capacity <= filter.maxCapacity) &&
                     (isColorProvided || EF.Functions.Like(h.Color.Name, filter.color)))
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(h => new MushroomHouseDto
                 {
                     Id = h.Id,
@@ -33,7 +38,6 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                     ResidentIds = h.Residents.Select(r => r.Id).ToList(),
                     AcceptedFoods = h.AcceptedFoods
                 })
-                .AsNoTracking()
                 .ToListAsync();
 
             return houses;
@@ -42,6 +46,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
         public async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
         {
             var house = await _context.MushroomHouses
+                .AsNoTracking()
                 .Where(h => h.Id == id)
                 .Select(h => new MushroomHouseDto
                 {
@@ -52,7 +57,6 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                     ResidentIds = h.Residents.Select(r => r.Id).ToList(),
                     AcceptedFoods = h.AcceptedFoods
                 })
-                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             return house;

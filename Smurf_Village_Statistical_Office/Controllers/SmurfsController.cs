@@ -18,9 +18,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
         private readonly ExportService<ISmurfExportStrategy, Smurf> _exportService = exportService;
 
         [HttpGet("Smurfs")]
-        public async Task<IActionResult> List([FromQuery] SmurfFilterDto filter)
+        public async Task<IActionResult> List([FromQuery] SmurfFilterDto filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var smurfs = await _smurfService.GetAllAsync(filter);
+            var smurfs = await _smurfService.GetAllAsync(filter, page, pageSize);
             return Ok(smurfs);
         }
 

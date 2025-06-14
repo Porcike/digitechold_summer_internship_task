@@ -2,6 +2,7 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.WorkingPlaceDtos;
 using Smurf_Village_Statistical_Office.Models;
+using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
@@ -10,7 +11,9 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
     {
         private readonly SmurfVillageContext _context = context;
 
-        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter, int page, int pageSize)
+        private string[] acceptedParams = ["Name"];
+
+        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter, int page, int pageSize, string? orderBy)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isEmployeeProvided = string.IsNullOrEmpty(filter.employee);
@@ -18,14 +21,32 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             var jobParseWasSuccessFul = Enum.TryParse(filter.acceptedJob, true, out Job parsedJob);
 
-            pageSize = Math.Min(pageSize, 100);
-
-            var workplaces = await _context.WorkingPlaces
+            var workplacesQuery = _context.WorkingPlaces
                 .AsNoTracking()
                 .Where(w =>
                     (isNameProvided || EF.Functions.Like(w.Name, filter.name)) &&
                     (isEmployeeProvided || w.Employees.Any(e => EF.Functions.Like(e.Name, filter.employee))) &&
-                    (isJobProvided || jobParseWasSuccessFul && w.AcceptedJobs.Contains(parsedJob)))
+                    (isJobProvided || jobParseWasSuccessFul && w.AcceptedJobs.Contains(parsedJob)));
+
+            if (!workplacesQuery.Any())
+            {
+                return new List<WorkingPlaceDto>();
+            }
+
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                workplacesQuery = IEntityService<
+                    WorkingPlace,
+                    WorkingPlaceDto,
+                    CreateWorkingPlaceDto,
+                    UpdateWorkingPlaceDto,
+                    WorkingPlaceFilterDto>
+                    .Order(workplacesQuery, acceptedParams, orderBy);
+            }
+
+            pageSize = Math.Min(pageSize, 100);
+
+            return await workplacesQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(w => new WorkingPlaceDto
@@ -36,13 +57,11 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                     EmployeeIds = w.Employees.Select(e => e.Id).ToList()
                 })
                 .ToListAsync();
-
-            return workplaces;
         }
 
         public async Task<WorkingPlaceDto?> GetByIdAsnyc(int id)
         {
-            var workplace = await _context.WorkingPlaces
+            return await _context.WorkingPlaces
                 .AsNoTracking()
                 .Where(w => w.Id == id)
                 .Select(w => new WorkingPlaceDto
@@ -53,8 +72,6 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                     EmployeeIds = w.Employees.Select(e => e.Id).ToList()
                 })
                 .FirstOrDefaultAsync();
-
-            return workplace;
         }
 
         public async Task<WorkingPlaceDto> InsertAsync(CreateWorkingPlaceDto value)

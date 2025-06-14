@@ -11,9 +11,13 @@ namespace Smurf_Village_Statistical_Office.Controllers
         private readonly IMushroomHouseService _mushroomService = mushroomService;
 
         [HttpGet("MushroomHouses")]
-        public async Task<IActionResult> List([FromQuery] MushroomHouseFilterDto filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> List(
+            [FromQuery] MushroomHouseFilterDto filter,
+            [FromQuery] string? orderBy,
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
         {
-            var houses = await _mushroomService.GetAllAsync(filter, page, pageSize);
+            var houses = await _mushroomService.GetAllAsync(filter, page, pageSize, orderBy);
             return Ok(houses);
         }
 

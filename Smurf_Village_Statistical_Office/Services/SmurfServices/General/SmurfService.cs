@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
 using Smurf_Village_Statistical_Office.Models;
+using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
@@ -12,7 +12,9 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
     {
         private readonly SmurfVillageContext _context = context;
 
-        public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize)
+        private string[] acceptedParams = ["Name", "Age"];
+
+        public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinAgeProvided = filter.minAge == null;
@@ -26,9 +28,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             var foodParseWasSuccessFul = Enum.TryParse(filter.favouriteFood, true, out Food parsedFavouriteFood);
             var brandParseWasSuccessful = Enum.TryParse(filter.favouriteBrand, true, out Brand parsedFavouriteBrand);
 
-            pageSize = Math.Min(pageSize, 100);
-
-            var smurfs = await _context.Smurfs
+            var smurfsQuery = _context.Smurfs
                 .AsNoTracking()
                 .Where(s =>
                     (isNameProvided || EF.Functions.Like(s.Name, filter.name)) &&
@@ -37,7 +37,27 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                     (isJobProvided || jobParseWasSuccessFul && s.Job == parsedJob) &&
                     (isFavouriteFoodProvided || foodParseWasSuccessFul && s.FavouriteFood == parsedFavouriteFood) &&
                     (isFavouriteBrandProvided || brandParseWasSuccessful && s.FavouriteBrand == parsedFavouriteBrand) &&
-                    (isFavouriteColorProvided || EF.Functions.Like(s.FavouriteColor.Name, filter.favouriteColor)))
+                    (isFavouriteColorProvided || EF.Functions.Like(s.FavouriteColor.Name, filter.favouriteColor)));
+
+            if (!smurfsQuery.Any())
+            {
+                return new List<SmurfDto>();
+            }
+
+            if(!string.IsNullOrWhiteSpace(orderBy))
+            {
+                smurfsQuery = IEntityService<
+                    Smurf,
+                    SmurfDto,
+                    CreateSmurfDto,
+                    UpdateSmurfDto,
+                    SmurfFilterDto>
+                    .Order(smurfsQuery, acceptedParams, orderBy);
+            }
+
+            pageSize = Math.Min(pageSize, 100);
+
+            return await smurfsQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(s => new SmurfDto
@@ -51,13 +71,11 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                     FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
                 })
                 .ToListAsync();
-
-            return smurfs;
         }
 
         public async Task<SmurfDto?> GetByIdAsnyc(int id)
         {
-            var smurf = await _context.Smurfs
+            return await _context.Smurfs
                 .AsNoTracking()
                 .Where(s => s.Id == id)
                 .Select(s => new SmurfDto
@@ -71,8 +89,6 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                     FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
                 })
                 .FirstOrDefaultAsync();
-
-            return smurf;
         }
 
         public async Task<SmurfDto> InsertAsync(CreateSmurfDto value)

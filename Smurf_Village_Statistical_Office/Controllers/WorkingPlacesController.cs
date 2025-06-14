@@ -11,9 +11,13 @@ namespace Smurf_Village_Statistical_Office.Controllers
         private readonly IWorkingPlaceService _workingplaceService = workingPlaceService;
 
         [HttpGet("WorkingPlaces")]
-        public async Task<IActionResult> List([FromQuery] WorkingPlaceFilterDto filter, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> List(
+            [FromQuery] WorkingPlaceFilterDto filter,
+            [FromQuery] string? orderBy,
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
         {
-            var workingPlaces = await _workingplaceService.GetAllAsync(filter, page, pageSize);
+            var workingPlaces = await _workingplaceService.GetAllAsync(filter, page, pageSize, orderBy);
             return Ok(workingPlaces);
         }
 

@@ -55,8 +55,8 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
         public async Task<WorkingPlaceDto> InsertAsync(CreateWorkingPlaceDto value)
         {
-            var (success, message) = await CheckForGeneralConstrains(value);
-            if (!success)
+            var message = await CheckForGeneralConstrains(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
@@ -86,8 +86,8 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
         public async Task UpdateAsync(UpdateWorkingPlaceDto value)
         {
-            var (success, message) = await CheckForGeneralConstrains(value);
-            if (!success)
+            var message = await CheckForGeneralConstrains(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
@@ -98,7 +98,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             if(workplace == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Workplace not found!");
             }
 
             var employees = await _context.Smurfs
@@ -114,10 +114,10 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
         public async Task DeleteAsync(int id)
         {
-            var workplaceExist = await _context.WorkingPlaces.AnyAsync(w => w.Id == id);
-            if (!workplaceExist)
+            var workplace = await _context.WorkingPlaces.FindAsync(id);
+            if (workplace == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Workplace not found!");
             }
 
             var hasEmployees = await _context.WorkingPlaces
@@ -127,19 +127,69 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             if (hasEmployees)
             {
-                throw new ArgumentException("This workplace still has employees!");
+                throw new InvalidOperationException("This workplace still has employees!");
             }
 
-            var workplace = await _context.WorkingPlaces.FirstAsync(w => w.Id == id);
             _context.WorkingPlaces.Remove(workplace);
             await _context.SaveChangesAsync();
         }
 
-        private async Task<(bool, string?)> CheckForGeneralConstrains(BaseWorkingPlaceDto value)
+        public async Task AddEmployeeAsync(int workplaceId, int smurfId)
+        {
+            var workplace = await _context.WorkingPlaces.FindAsync(workplaceId);
+            if (workplace == null)
+            {
+                throw new KeyNotFoundException("Workplace not found!");
+            }
+
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
+            {
+                throw new KeyNotFoundException("Smurf not found!");
+            }
+
+            if (!workplace.AcceptedJobs.Contains(smurf.Job))
+            {
+                throw new InvalidOperationException("Incompatible jobs!");
+            }
+
+            if (workplace.Employees.Contains(smurf))
+            {
+                throw new InvalidOperationException("This smurf is already an employee!");
+            }
+
+            workplace.Employees.Add(smurf);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveEmployeeAsync(int workplaceId, int smurfId)
+        {
+            var workplace = await _context.WorkingPlaces.FindAsync(workplaceId);
+            if (workplace == null)
+            {
+                throw new KeyNotFoundException("Workplace not found!");
+            }
+
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
+            {
+                throw new KeyNotFoundException("Smurf not found!");
+            }
+
+            if (!workplace.Employees.Contains(smurf))
+            {
+                throw new KeyNotFoundException("This smurf is not an employee!");
+            }
+
+            workplace.Employees.Remove(smurf);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<string?> CheckForGeneralConstrains(BaseWorkingPlaceDto value)
         {
             if(value.AcceptedJobs.Any(j => !Enum.IsDefined(typeof(Job), j)))
             {
-                return (false, "Unknown job!");
+                return "Unknown job!";
             }
 
             var employeeCount = await _context.Smurfs
@@ -147,7 +197,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             if(value.EmployeeIds.Count != employeeCount)
             {
-                return (false, "Unknown employee!");
+                return "Unknown employee!";
             }
 
             var isJobInCompatible = await _context.Smurfs
@@ -157,10 +207,10 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             if (isJobInCompatible)
             {
-                return (false, "The accepted jobs aren't compatible with the employees' qualifications!");
+                return "Incompatible jobs!";
             }
 
-            return (true, null);
+            return null;
         }
     }
 }

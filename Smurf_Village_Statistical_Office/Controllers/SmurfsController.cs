@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
+using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies;
 using Smurf_Village_Statistical_Office.Services.SmurfServices.General;
@@ -10,11 +11,11 @@ namespace Smurf_Village_Statistical_Office.Controllers
     [ApiController]
     public class SmurfsController(
         ISmurfService smurfService, 
-        ExportService<ISmurfsExportStrategy> exportService) : ControllerBase
+        ExportService<ISmurfExportStrategy, Smurf> exportService) : ControllerBase
     {
         private readonly ISmurfService _smurfService = smurfService;
 
-        private readonly ExportService<ISmurfsExportStrategy> _exportService = exportService;
+        private readonly ExportService<ISmurfExportStrategy, Smurf> _exportService = exportService;
 
         [HttpGet("Smurfs")]
         public async Task<IActionResult> List([FromQuery] SmurfFilterDto filter)
@@ -40,7 +41,10 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new 
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -54,11 +58,17 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -70,9 +80,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
                 await _smurfService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
 

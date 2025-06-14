@@ -56,9 +56,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
                     message = ex.Message,
                 });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new 
+                {
+                    message = ex.Message,
+                });
             }
         }
 
@@ -83,12 +86,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
         }
 
-        [HttpPost("LeisureVenues/{id}/members/{memberId}")]
-        public async Task<IActionResult> AddMember([FromRoute] int id, [FromRoute] int memberId)
+        [HttpPost("LeisureVenues/{venueId}/members/{smurfId}")]
+        public async Task<IActionResult> AddMember([FromRoute] int venueId, [FromRoute] int smurfId)
         {
             try
             {
-                await _leisureVenueService.AddMemberAsync(id, memberId);
+                await _leisureVenueService.AddMemberAsync(venueId, smurfId);
                 return NoContent();
             }
             catch (InvalidOperationException ex)
@@ -107,12 +110,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
         }
 
-        [HttpDelete("LeisureVenues/{id}/members/{memberId}")]
-        public async Task<IActionResult> RemoveMember([FromRoute] int id, [FromRoute] int memberId)
+        [HttpDelete("LeisureVenues/{venueId}/members/{smurfId}")]
+        public async Task<IActionResult> RemoveMember([FromRoute] int venueId, [FromRoute] int smurfId)
         {
             try
             {
-                await _leisureVenueService.RemoveMemberAsync(id, memberId);
+                await _leisureVenueService.RemoveMemberAsync(venueId, smurfId);
                 return NoContent();
             }
             catch(KeyNotFoundException ex)

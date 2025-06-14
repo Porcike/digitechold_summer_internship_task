@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Smurf_Village_Statistical_Office.Data;
+using Smurf_Village_Statistical_Office.Models;
 using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General;
 using Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General;
@@ -25,9 +26,9 @@ namespace Smurf_Village_Statistical_Office
             builder.Services.AddScoped<IWorkingPlaceService, WorkingPlaceService>();
             builder.Services.AddScoped<ILeisureVenueService, LeisureVenueService>();
 
-            builder.Services.AddScoped<ISmurfsExportStrategy, TxtExportSmurfsStrategy>();
+            builder.Services.AddScoped<ISmurfExportStrategy, TxtExportSmurfStrategy>();
 
-            builder.Services.AddScoped<ExportService<ISmurfsExportStrategy>>();  
+            builder.Services.AddScoped<ExportService<ISmurfExportStrategy, Smurf>>();  
 
             builder.Services.AddControllers();
 

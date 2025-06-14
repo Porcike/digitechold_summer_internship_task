@@ -109,10 +109,10 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 throw new ArgumentException(message);
             }
 
-            var smurf = await _context.Smurfs.FirstOrDefaultAsync(s => s.Id == value.Id);
+            var smurf = await _context.Smurfs.FindAsync(value.Id);
             if(smurf == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Smurf not found!");
             }
 
             var isIncompatibleWithWorkplaces = await _context.WorkingPlaces
@@ -122,7 +122,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 
             if(isIncompatibleWithWorkplaces)
             {
-                throw new ArgumentException("The new job isn't compatible with the existing workplaces!");
+                throw new ArgumentException("Incompatible job!");
             }
 
             var isIncompatibleWithHouses = await _context.MushroomHouses
@@ -132,17 +132,17 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 
             if(isIncompatibleWithHouses)
             {
-                throw new ArgumentException("The new favourite color isn't compatible with the houses' colors");
+                throw new ArgumentException("Incompatible color!");
             }
 
-            var isIncompatibleLeisureVenues = await _context.LeisureVenues
+            var isIncompatibleVenues = await _context.LeisureVenues
                 .AnyAsync(v => 
                     v.Members.Any(m => m.Id == value.Id) &&
                     (int)v.AcceptedBrand != value.FavouriteBrand);
 
-            if (isIncompatibleLeisureVenues)
+            if (isIncompatibleVenues)
             {
-                throw new ArgumentException("The new favourite brand isn't compatible with the leisure venues' accepted brands");
+                throw new ArgumentException("Incompatible brand!");
             }
 
             smurf.Name = value.Name;
@@ -157,10 +157,10 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 
         public async Task DeleteAsync(int id)
         {
-            var smurf = await _context.Smurfs.FirstOrDefaultAsync(s => s.Id == id);
+            var smurf = await _context.Smurfs.FindAsync(id);
             if(smurf == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Smurf not found!");
             }
 
             _context.Smurfs.Remove(smurf);
@@ -178,7 +178,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             if (!Enum.IsDefined(typeof(Food), value.FavouriteFood))
             {
                 message = "Unknown food!";
-                throw new ArgumentException("Unknown food!");
+                return false;
             }
 
             if (!Enum.IsDefined(typeof(Brand), value.FavouriteBrand))

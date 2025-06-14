@@ -31,13 +31,16 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> GetJob([FromRoute] int id)
         {
             var isValid = Enum.IsDefined(typeof(Job), id);
-            return isValid 
-                ? Ok(new JobDto 
+            return isValid
+                ? Ok(new JobDto
                 {
                     Id = id,
                     Name = ((Job)id).ToString()
-                }) 
-                : NotFound();
+                })
+                : NotFound(new
+                {
+                    message = "Job not found!"
+                });
         }
     }
 }

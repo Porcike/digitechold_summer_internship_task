@@ -9,5 +9,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
         UpdateWorkingPlaceDto,
         WorkingPlaceFilterDto>
     {
+        Task AddEmployeeAsync(int workplaceId, int smurfId);
+        Task RemoveEmployeeAsync(int workplaceId, int smurfId);
     }
 }

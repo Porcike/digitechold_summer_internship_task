@@ -60,8 +60,8 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
         public async Task<MushroomHouseDto> InsertAsync(CreateMushroomHouseDto value)
         {
-            var (success, message) = await CheckForGeneralConstraints(value);
-            if (!success)
+            var message = await CheckForGeneralConstraints(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
@@ -95,13 +95,17 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
         public async Task UpdateAsync(UpdateMushroomHouseDto value)
         {
-            var (success, message) = await CheckForGeneralConstraints(value);
-            if (!success)
+            var  message = await CheckForGeneralConstraints(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
 
-            var house = await _context.MushroomHouses.FirstAsync(h => h.Id == value.Id);
+            var house = await _context.MushroomHouses.FindAsync(value.Id);
+            if (house == null)
+            {
+                throw new KeyNotFoundException("House not found!");
+            }
 
             await _context.Entry(house)
                 .Collection(h => h.Residents)
@@ -122,10 +126,10 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
         public async Task DeleteAsync(int id)
         {
-            var houseExists = await _context.MushroomHouses.AnyAsync(h => h.Id == id);
-            if (!houseExists)
+            var house = await _context.MushroomHouses.FindAsync(id);
+            if (house == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("House not found!");
             }
 
             var hasResidents = await _context.MushroomHouses
@@ -135,19 +139,79 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             if (hasResidents)
             {
-                throw new ArgumentException("This house has residents in it!");
+                throw new InvalidOperationException("This house still has residents in it!");
             }
 
-            var house = await _context.MushroomHouses.FirstAsync(h => h.Id == id);
             _context.MushroomHouses.Remove(house);
             await _context.SaveChangesAsync();
         }
 
-        private async Task<(bool, string?)> CheckForGeneralConstraints(BaseMushroomHouseDto value)
+        public async Task AddResidentAsync(int houseId, int smurfId)
+        {
+            var house = await _context.MushroomHouses.FindAsync(houseId);
+            if (house == null)
+            {
+                throw new KeyNotFoundException("House not found!");
+            }
+
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
+            {
+                throw new KeyNotFoundException("Smurf not found!");
+            }
+
+            if (house.Color.ToArgb() == smurf.FavouriteColor.ToArgb())
+            {
+                throw new InvalidOperationException("Incompatible colors!");
+            }
+
+            if (house.Residents.Contains(smurf))
+            {
+                throw new InvalidOperationException("This smurf is already a resident!");
+            }
+
+            var residentCount = await _context.MushroomHouses
+                .Where(l => l.Id == houseId)
+                .Select(l => l.Residents.Count)
+                .FirstAsync();
+
+            if (residentCount + 1 > house.Capacity)
+            {
+                throw new InvalidOperationException("This house can't take any more residents!");
+            }
+
+            house.Residents.Add(smurf);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveResidentAsync(int houseId, int smurfId)
+        {
+            var house = await _context.MushroomHouses.FindAsync(houseId);
+            if (house == null)
+            {
+                throw new KeyNotFoundException("House not found!");
+            }
+
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
+            {
+                throw new KeyNotFoundException("Smurf not found!");
+            }
+
+            if (!house.Residents.Contains(smurf))
+            {
+                throw new KeyNotFoundException("This smurf is not a resident!");
+            }
+
+            house.Residents.Remove(smurf);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<string?> CheckForGeneralConstraints(BaseMushroomHouseDto value)
         {
             if(value.Capacity < value.ResidentIds.Count)
             {
-                return (false, "The capacity is too small!");
+                return "The capacity is too small!";
             }
 
             var residentCount = await _context.Smurfs
@@ -155,7 +219,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             if (value.ResidentIds.Count != residentCount)
             {
-                return (false, "Unknown resident!");
+                return "Unknown smurf!";
             }
 
             var isHouseColorIncompatible = await _context.Smurfs
@@ -165,10 +229,10 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             if (isHouseColorIncompatible)
             {
-                return (false, "The house color isn't compatible with the residents' favourite color!");
+                return "Incompatible colors!";
             }
 
-            return (true, null);
+            return null;
         }
     }
 }

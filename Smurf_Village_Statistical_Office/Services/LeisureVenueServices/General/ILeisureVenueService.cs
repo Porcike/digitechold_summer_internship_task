@@ -9,7 +9,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
         UpdateLeisureVenueDto,
         LeisureVenueFilterDto>
     {
-        Task AddMemberAsync(int id, int memberId);
-        Task RemoveMemberAsync(int id, int memberId);
+        Task AddMemberAsync(int venueId, int smurfId);
+        Task RemoveMemberAsync(int venueId, int smurfId);
     }
 }

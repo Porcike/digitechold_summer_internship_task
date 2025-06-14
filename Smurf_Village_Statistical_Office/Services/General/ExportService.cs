@@ -2,10 +2,12 @@
 
 namespace Smurf_Village_Statistical_Office.Services.General
 {
-    public class ExportService<T>(IEnumerable<T> smurfsExportStrategies) where T: IEntityExportStrategy
+    public class ExportService<TExportStrategy, TEntity>(IEnumerable<TExportStrategy> exportStrategies) 
+        where TExportStrategy: IEntityExportStrategy
+        where TEntity : class
     {
-        private readonly IDictionary<string, T> _smurfsExportStrategies = smurfsExportStrategies.ToDictionary(
-                s => s.GetType().Name.Replace("ExportSmurfsStrategy", "").ToLower(),
+        private readonly IDictionary<string, TExportStrategy> _smurfsExportStrategies = exportStrategies.ToDictionary(
+                s => s.GetType().Name.Replace($"Export{typeof(TEntity).Name}Strategy", "").ToLower(),
                 s => s);
 
         public async Task<(byte[], string, string)> ExportAllAsync(string type)
@@ -32,7 +34,7 @@ namespace Smurf_Village_Statistical_Office.Services.General
             var (bytes, exportType) = await strategy.ExportById(id);
             if(bytes == null || exportType == null)
             {
-                throw new KeyNotFoundException("Unknown entity!");
+                throw new KeyNotFoundException("Entity not found!");
             }
 
             var contentType = ExportUtil.exportDictionary[exportType ?? 0];

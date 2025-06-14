@@ -35,7 +35,10 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new 
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -49,11 +52,17 @@ namespace Smurf_Village_Statistical_Office.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -65,13 +74,60 @@ namespace Smurf_Village_Statistical_Office.Controllers
                 await _workingplaceService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (ArgumentException ex)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return Conflict(new 
+                {
+                    message = ex.Message
+                });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("WorkingPlaces/{workplaceId}/employees/{smurfId}")]
+        public async Task<IActionResult> AddEmployee([FromRoute] int workplaceId, [FromRoute] int smurfId)
+        {
+            try
+            {
+                await _workingplaceService.AddEmployeeAsync(workplaceId, smurfId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpDelete("WorkingPlaces/{workplaceId}/employees/{smurfId}")]
+        public async Task<IActionResult> RemoveEmployee([FromRoute] int workplaceId, [FromRoute] int smurfId)
+        {
+            try
+            {
+                await _workingplaceService.RemoveEmployeeAsync(workplaceId, smurfId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
     }

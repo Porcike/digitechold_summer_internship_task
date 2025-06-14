@@ -62,8 +62,8 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
         public async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
         {
-            var (success, message) = await CheckForGeneralConstraints(value);
-            if (!success)
+            var message = await CheckForGeneralConstraints(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
@@ -95,8 +95,8 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
         public async Task UpdateAsync(UpdateLeisureVenueDto value)
         {
-            var (success, message) = await CheckForGeneralConstraints(value);
-            if (!success)
+            var message = await CheckForGeneralConstraints(value);
+            if (message != null)
             {
                 throw new ArgumentException(message);
             }
@@ -104,7 +104,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             var venue = await _context.LeisureVenues.FindAsync(value.Id);
             if (venue == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Venue not found!");
             }
 
             await _context.Entry(venue)
@@ -128,7 +128,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             var venue = await _context.LeisureVenues.FindAsync(id);
             if (venue == null)
             {
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("Venue not found!");
             }
 
             var hasMembers = await _context.LeisureVenues
@@ -146,77 +146,77 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             await _context.SaveChangesAsync();
         }
 
-        public async Task AddMemberAsync(int id, int memberId)
+        public async Task AddMemberAsync(int venueId, int smurfId)
         {
-            var venue = await _context.LeisureVenues.FindAsync(id);
+            var venue = await _context.LeisureVenues.FindAsync(venueId);
             if (venue == null)
             {
-                throw new KeyNotFoundException("Unknown venue!");
+                throw new KeyNotFoundException("Venue not found!");
             }
 
-            var member = await _context.Smurfs.FindAsync(memberId);
-            if (member == null)
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
             {
-                throw new KeyNotFoundException("Unknown smurf!");
+                throw new KeyNotFoundException("Smurf not found!");
             }
 
-            if (venue.AcceptedBrand != member.FavouriteBrand)
+            if (venue.AcceptedBrand != smurf.FavouriteBrand)
             {
-                throw new InvalidOperationException("The accepted brand isn't compatible with the smurf's favourite brand!");
+                throw new InvalidOperationException("Incompatible brands!");
             }
 
-            if (venue.Members.Contains(member))
+            if (venue.Members.Contains(smurf))
             {
                 throw new InvalidOperationException("This smurf is already a member!");
             }
 
-            var memberCount = _context.LeisureVenues
-                .Where(l => l.Id == id)
+            var memberCount = await _context.LeisureVenues
+                .Where(l => l.Id == venueId)
                 .Select(l => l.Members.Count)
-                .First();
+                .FirstAsync();
 
             if (memberCount + 1 > venue.Capacity)
             {
-                throw new InvalidOperationException("The venue can't take any more members!");
+                throw new InvalidOperationException("This venue can't take any more members!");
             }
 
-            venue.Members.Add(member);
+            venue.Members.Add(smurf);
             await _context.SaveChangesAsync();
         }
 
-        public async Task RemoveMemberAsync(int id, int memberId)
+        public async Task RemoveMemberAsync(int venueId, int smurfId)
         {
-            var venue = await _context.LeisureVenues.FindAsync(id);
+            var venue = await _context.LeisureVenues.FindAsync(venueId);
             if (venue == null)
             {
-                throw new KeyNotFoundException("Unknown venue!");
+                throw new KeyNotFoundException("Venue not found!");
             }
 
-            var member = await _context.Smurfs.FindAsync(memberId);
-            if (member == null)
+            var smurf = await _context.Smurfs.FindAsync(smurfId);
+            if (smurf == null)
             {
-                throw new KeyNotFoundException("Unknown smurf!");
+                throw new KeyNotFoundException("Smurf not found!");
             }
 
-            if (!venue.Members.Contains(member))
+            if (!venue.Members.Contains(smurf))
             {
                 throw new KeyNotFoundException("This smurf is not a member!");
             }
 
-            venue.Members.Remove(member);
+            venue.Members.Remove(smurf);
             await _context.SaveChangesAsync();
         }
 
-        private async Task<(bool, string?)> CheckForGeneralConstraints(BaseLeisureVenueDto value)
+        private async Task<string?> CheckForGeneralConstraints(BaseLeisureVenueDto value)
         {
             if (value.Capacity < value.MemberIds.Count)
             {
-                return (false, "The capacity is too small!");
+                return "The capacity is too small!";
             }
 
             if(!Enum.IsDefined(typeof(Brand), value.AcceptedBrand))
             {
-                return (false, "Unknown brand!");
+                return "Unknown brand!";
             }
 
             var memberCount = await _context.Smurfs
@@ -224,7 +224,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             if (value.MemberIds.Count != memberCount)
             {
-                return (false, "Unknown member!");
+                return "Unknown smurf!";
             }
 
             var isBrandIncompatible = await _context.Smurfs
@@ -234,10 +234,10 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             if (isBrandIncompatible)
             {
-                return (false, "The accepted brand isn't compatible with the members' favourite brand!");
+                return "Incompatible brands!";
             }
 
-            return (true, null);
+            return null;
         }
     }
 }

@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies
 {
-    public class TxtExportSmurfsStrategy : ISmurfsExportStrategy
+    public class TxtExportSmurfStrategy : ISmurfExportStrategy
     {
         private readonly SmurfVillageContext _context;
 
-        public TxtExportSmurfsStrategy(SmurfVillageContext context)
+        public TxtExportSmurfStrategy(SmurfVillageContext context)
         {
             _context = context;
         }

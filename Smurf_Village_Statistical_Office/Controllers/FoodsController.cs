@@ -31,13 +31,16 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> GetFood([FromRoute] int id)
         {
             var isValid = Enum.IsDefined(typeof(Food), id);
-            return isValid 
-                ? Ok(new FoodDto 
+            return isValid
+                ? Ok(new FoodDto
                 {
                     Id = id,
                     Name = ((Food)id).ToString()
-                }) 
-                : NotFound();
+                })
+                : NotFound(new
+                {
+                    message = "Food not found!"
+                });
         }
     }
 }

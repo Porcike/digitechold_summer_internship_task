@@ -9,6 +9,5 @@ namespace Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos
         public List<int> ResidentIds { get; init; } = new List<int>();
         public List<int> AcceptedFoods { get; init; } = new List<int>();
         public ColorDto Color { get; init; } = new ColorDto();
-
     }
 }

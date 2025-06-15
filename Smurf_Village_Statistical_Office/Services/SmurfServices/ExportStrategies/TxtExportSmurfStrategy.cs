@@ -6,14 +6,9 @@ using System.Text;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies
 {
-    public class TxtExportSmurfStrategy : ISmurfExportStrategy
+    public class TxtExportSmurfStrategy(SmurfVillageContext context) : ISmurfExportStrategy
     {
-        private readonly SmurfVillageContext _context;
-
-        public TxtExportSmurfStrategy(SmurfVillageContext context)
-        {
-            _context = context;
-        }
+        private readonly SmurfVillageContext _context = context;
 
         public async Task<(byte[], ExportType)> ExportAllAsync()
         {

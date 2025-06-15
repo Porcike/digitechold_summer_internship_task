@@ -6,9 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class WorkingPlacesController(WorkingPlaceService workingPlaceService) : ControllerBase
+    public class WorkingPlacesController(IWorkingPlaceService workingPlaceService) : ControllerBase
     {
-        private readonly WorkingPlaceService _workingplaceService = workingPlaceService;
+        private readonly IWorkingPlaceService _workingplaceService = workingPlaceService;
 
         [HttpGet("WorkingPlaces")]
         public async Task<IActionResult> List(
@@ -25,7 +25,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             var workingPlace = await _workingplaceService.GetByIdAsnyc(id);
-            return workingPlace == null ? NotFound() : Ok(workingPlace);
+            return workingPlace != null
+                ? Ok(workingPlace)
+                : NotFound(new
+                {
+                    message = "Workplace not found!"
+                });
         }
 
 

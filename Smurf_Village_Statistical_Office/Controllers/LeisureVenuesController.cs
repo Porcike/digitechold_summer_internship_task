@@ -6,9 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class LeisureVenuesController(LeisureVenueService leisureVenueService) : ControllerBase
+    public class LeisureVenuesController(ILeisureVenueService leisureVenueService) : ControllerBase
     {
-        private readonly LeisureVenueService _leisureVenueService = leisureVenueService;
+        private readonly ILeisureVenueService _leisureVenueService = leisureVenueService;
 
         [HttpGet("LeisureVenues")]
         public async Task<IActionResult> List(
@@ -25,7 +25,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             var venue = await _leisureVenueService.GetByIdAsnyc(id);
-            return venue == null ? NotFound() : Ok(venue);
+            return venue != null 
+                ? Ok(venue)
+                : NotFound(new 
+                {
+                    message = "Venue not found!"
+                });
         }
 
         [HttpPost("LeisureVenues")]
@@ -84,9 +89,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
                     message = ex.Message
                 });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
 

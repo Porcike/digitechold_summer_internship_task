@@ -3,27 +3,18 @@ using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 using Smurf_Village_Statistical_Office.DTO.MushroomHouseDtos;
 using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Utils;
+using System.Linq.Expressions;
 
 namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General
 {
-    public class MushroomHouseService : BaseEntityService<
-        MushroomHouse, 
-        MushroomHouseDto, 
-        CreateMushroomHouseDto, 
-        UpdateMushroomHouseDto, 
-        MushroomHouseFilterDto>
+    public class MushroomHouseService(SmurfVillageContext context) : IMushroomHouseService
     {
-        private readonly SmurfVillageContext _context;
+        private readonly SmurfVillageContext _context = context;
 
-        public MushroomHouseService(SmurfVillageContext context)
-        {
-            AcceptedParams = new List<string>() { "Capacity" };
-            _context = context;
-        }
+        private readonly string[] _acceptedParams = ["Capacity"];
 
-        public override async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(
+        public async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(
             MushroomHouseFilterDto filter, 
             int page, 
             int pageSize, 
@@ -49,7 +40,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             if(!string.IsNullOrWhiteSpace(orderBy))
             {
-                housesQuery = Order(housesQuery, orderBy);
+                housesQuery = OrderUtil<MushroomHouse>.Order(housesQuery, _acceptedParams, orderBy);
             }
 
             pageSize = Math.Min(pageSize, 100);
@@ -57,36 +48,20 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
             return await housesQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(h => new MushroomHouseDto
-                {
-                    Id = h.Id,
-                    Capacity = h.Capacity,
-                    Color = ColorDto.FromColor(h.Color),
-                    Motto = h.Motto,
-                    ResidentIds = h.Residents.Select(r => r.Id).ToList(),
-                    AcceptedFoods = h.AcceptedFoods
-                })
+                .Select(ToDtoExpression)
                 .ToListAsync();
         }
 
-        public override async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
+        public async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
         {
             return await _context.MushroomHouses
                 .AsNoTracking()
                 .Where(h => h.Id == id)
-                .Select(h => new MushroomHouseDto
-                {
-                    Id = h.Id,
-                    Capacity = h.Capacity,
-                    Color = ColorDto.FromColor(h.Color),
-                    Motto = h.Motto,
-                    ResidentIds = h.Residents.Select(r => r.Id).ToList(),
-                    AcceptedFoods = h.AcceptedFoods
-                })
+                .Select(ToDtoExpression)
                 .FirstOrDefaultAsync();
         }
 
-        public override async Task<MushroomHouseDto> InsertAsync(CreateMushroomHouseDto value)
+        public async Task<MushroomHouseDto> InsertAsync(CreateMushroomHouseDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -98,30 +73,15 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 .Where(s => value.ResidentIds.Contains(s.Id))
                 .ToListAsync();
 
-            var house = new MushroomHouse
-            {
-                Residents = residents,
-                Capacity = value.Capacity,
-                AcceptedFoods = value.AcceptedFoods.Select(f => (Food)f).ToList(),
-                Color = ColorDto.ToColor(value.Color),
-                Motto = value.Motto,
-            };
+            var house = ToModel(value, residents);
 
             await _context.MushroomHouses.AddAsync(house);
             await _context.SaveChangesAsync();
 
-            return new MushroomHouseDto
-            {
-                Id = house.Id,
-                Capacity = house.Capacity,
-                Color = ColorDto.FromColor(house.Color),
-                Motto = house.Motto,
-                ResidentIds = house.Residents.Select(r => r.Id).ToList(),
-                AcceptedFoods = house.AcceptedFoods
-            };
+            return ToDto(house);
         }
 
-        public override async Task UpdateAsync(UpdateMushroomHouseDto value)
+        public async Task UpdateAsync(UpdateMushroomHouseDto value)
         {
             var  message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -152,7 +112,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
             await _context.SaveChangesAsync();
         }
 
-        public override async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var house = await _context.MushroomHouses.FindAsync(id);
             if (house == null)
@@ -262,5 +222,34 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             return null;
         }
+
+        private Expression<Func<MushroomHouse, MushroomHouseDto>> ToDtoExpression = h => new MushroomHouseDto
+        {
+            Id = h.Id,
+            Capacity = h.Capacity,
+            Color = ColorDto.FromColor(h.Color),
+            Motto = h.Motto,
+            ResidentIds = h.Residents.Select(r => r.Id).ToList(),
+            AcceptedFoods = h.AcceptedFoods
+        };
+
+        private MushroomHouseDto ToDto(MushroomHouse h) => new MushroomHouseDto
+        {
+            Id = h.Id,
+            Capacity = h.Capacity,
+            Color = ColorDto.FromColor(h.Color),
+            Motto = h.Motto,
+            ResidentIds = h.Residents.Select(r => r.Id).ToList(),
+            AcceptedFoods = h.AcceptedFoods
+        };
+
+        private MushroomHouse ToModel(BaseMushroomHouseDto value, List<Smurf> residents) => new MushroomHouse
+        {
+            Residents = residents,
+            Capacity = value.Capacity,
+            AcceptedFoods = value.AcceptedFoods.Select(f => (Food)f).ToList(),
+            Color = ColorDto.ToColor(value.Color),
+            Motto = value.Motto
+        };
     }
 }

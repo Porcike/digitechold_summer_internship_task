@@ -3,22 +3,18 @@ using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.ColorDtos;
 using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
 using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Utils;
+using System.Linq.Expressions;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 {
-    public class SmurfService : BaseEntityService<Smurf, SmurfDto, CreateSmurfDto, UpdateSmurfDto, SmurfFilterDto>
+    public class SmurfService(SmurfVillageContext context) : ISmurfService
     {
-        private readonly SmurfVillageContext _context;
+        private readonly SmurfVillageContext _context = context;
 
-        public SmurfService(SmurfVillageContext context)
-        {
-            AcceptedParams = new List<string> { "Name", "Age" };
-            _context = context;
-        }
+        private readonly string[] _acceptedParams = ["Name", "Age"];
 
-        public override async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy)
+        public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinAgeProvided = filter.minAge == null;
@@ -50,7 +46,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 
             if(!string.IsNullOrWhiteSpace(orderBy))
             {
-                smurfsQuery = Order(smurfsQuery, orderBy);
+                smurfsQuery = OrderUtil<Smurf>.Order(smurfsQuery, _acceptedParams, orderBy);
             }
 
             pageSize = Math.Min(pageSize, 100);
@@ -58,70 +54,35 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             return await smurfsQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(s => new SmurfDto
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Age = s.Age,
-                    Job = s.Job,
-                    FavouriteFood = s.FavouriteFood,
-                    FavouriteBrand = s.FavouriteBrand,
-                    FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
-                })
+                .Select(ToDtoExpression)
                 .ToListAsync();
         }
 
-        public override async Task<SmurfDto?> GetByIdAsnyc(int id)
+        public async Task<SmurfDto?> GetByIdAsnyc(int id)
         {
             return await _context.Smurfs
                 .AsNoTracking()
                 .Where(s => s.Id == id)
-                .Select(s => new SmurfDto
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Age = s.Age,
-                    Job = s.Job,
-                    FavouriteFood = s.FavouriteFood,
-                    FavouriteBrand = s.FavouriteBrand,
-                    FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
-                })
+                .Select(ToDtoExpression)
                 .FirstOrDefaultAsync();
         }
 
-        public override async Task<SmurfDto> InsertAsync(CreateSmurfDto value)
+        public async Task<SmurfDto> InsertAsync(CreateSmurfDto value)
         {
             if(!CheckGeneralConstraints(value, out var message))
             {
                 throw new ArgumentException(message);
             }
 
-            var smurf = new Smurf
-            {
-                Name = value.Name,
-                Age = value.Age,
-                Job = (Job)value.Job,
-                FavouriteFood = (Food)value.FavouriteFood,
-                FavouriteBrand = (Brand)value.FavouriteBrand,
-                FavouriteColor = ColorDto.ToColor(value.FavouriteColor)
-            };
+            var smurf = ToModel(value);
 
             await _context.Smurfs.AddAsync(smurf);
             await _context.SaveChangesAsync();
 
-            return new SmurfDto
-            {
-                Id = smurf.Id,
-                Name = smurf.Name,
-                Age = smurf.Age,
-                Job = smurf.Job,
-                FavouriteFood = smurf.FavouriteFood,
-                FavouriteBrand = smurf.FavouriteBrand,
-                FavouriteColor = ColorDto.FromColor(smurf.FavouriteColor)
-            };
+            return ToDto(smurf);
         }
 
-        public override async Task UpdateAsync(UpdateSmurfDto value)
+        public async Task UpdateAsync(UpdateSmurfDto value)
         {
             if(!CheckGeneralConstraints(value, out var message))
             {
@@ -174,7 +135,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             await _context.SaveChangesAsync();
         }
 
-        public override async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var smurf = await _context.Smurfs.FindAsync(id);
             if(smurf == null)
@@ -209,5 +170,37 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             message = null;
             return true;
         }
+
+        private Expression<Func<Smurf, SmurfDto>> ToDtoExpression = s => new SmurfDto
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Age = s.Age,
+            Job = s.Job,
+            FavouriteFood = s.FavouriteFood,
+            FavouriteBrand = s.FavouriteBrand,
+            FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
+        };
+
+        private SmurfDto ToDto(Smurf s) => new SmurfDto
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Age = s.Age,
+            Job = s.Job,
+            FavouriteFood = s.FavouriteFood,
+            FavouriteBrand = s.FavouriteBrand,
+            FavouriteColor = ColorDto.FromColor(s.FavouriteColor)
+        };
+
+        private Smurf ToModel(BaseSmurfDto value) => new Smurf
+        {
+            Name = value.Name,
+            Age = value.Age,
+            Job = (Job)value.Job,
+            FavouriteFood = (Food)value.FavouriteFood,
+            FavouriteBrand = (Brand)value.FavouriteBrand,
+            FavouriteColor = ColorDto.ToColor(value.FavouriteColor)
+        };
     }
 }

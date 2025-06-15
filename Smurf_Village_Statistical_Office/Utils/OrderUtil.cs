@@ -1,21 +1,8 @@
-﻿using Smurf_Village_Statistical_Office.Utils;
-
-namespace Smurf_Village_Statistical_Office.Services.General
+﻿namespace Smurf_Village_Statistical_Office.Utils
 {
-    public interface IEntityService<TEntity, TDto, TCreateDto, TUpdateDto, TDtoFilter>
-        where TEntity : class
-        where TDto : class 
-        where TCreateDto : class
-        where TUpdateDto : class
-        where TDtoFilter : class
+    public static class OrderUtil<TEntity>
     {
-        Task<IReadOnlyCollection<TDto>> GetAllAsync(TDtoFilter filter, int page, int pageSize, string? orderBy);
-        Task<TDto?> GetByIdAsnyc(int id);
-        Task<TDto> InsertAsync(TCreateDto value);
-        Task UpdateAsync(TUpdateDto value);
-        Task DeleteAsync(int id);
-
-        static IQueryable<TEntity> Order(IQueryable<TEntity> query, string[] acceptedParams, string orderBy)
+        public static IQueryable<TEntity> Order(IQueryable<TEntity> query, string[] acceptedParams, string orderBy)
         {
             var orderParams = orderBy.Trim().Split(',');
             var foundParams = new HashSet<string>();

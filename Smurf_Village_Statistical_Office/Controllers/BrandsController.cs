@@ -2,7 +2,6 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.BrandDtos;
 using Smurf_Village_Statistical_Office.Utils;
-using System.Diagnostics;
 
 namespace Smurf_Village_Statistical_Office.Controllers
 {

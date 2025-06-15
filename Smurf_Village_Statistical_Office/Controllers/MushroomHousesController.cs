@@ -6,9 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class MushroomHousesController(MushroomHouseService mushroomService) : ControllerBase
+    public class MushroomHousesController(IMushroomHouseService mushroomService) : ControllerBase
     {
-        private readonly MushroomHouseService _mushroomService = mushroomService;
+        private readonly IMushroomHouseService _mushroomService = mushroomService;
 
         [HttpGet("MushroomHouses")]
         public async Task<IActionResult> List(
@@ -25,7 +25,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             var house = await _mushroomService.GetByIdAsnyc(id);
-            return house == null ? NotFound() : Ok(house);
+            return house != null
+                ? Ok(house)
+                : NotFound(new 
+                {
+                    message = "House not found!"
+                });
         }
 
         [HttpPost("MushroomHouses")]
@@ -122,7 +127,7 @@ namespace Smurf_Village_Statistical_Office.Controllers
         {
             try
             {
-                await _mushroomService.AddResidentAsync(houseId, smurfId);
+                await _mushroomService.RemoveResidentAsync(houseId, smurfId);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)

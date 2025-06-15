@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
 using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
+using Smurf_Village_Statistical_Office.Services.General.ExportService;
 using Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies;
 using Smurf_Village_Statistical_Office.Services.SmurfServices.General;
 
@@ -10,10 +10,10 @@ namespace Smurf_Village_Statistical_Office.Controllers
     [Route("stat")]
     [ApiController]
     public class SmurfsController(
-        SmurfService smurfService, 
+        ISmurfService smurfService, 
         ExportService<ISmurfExportStrategy, Smurf> exportService) : ControllerBase
     {
-        private readonly SmurfService _smurfService = smurfService;
+        private readonly ISmurfService _smurfService = smurfService;
 
         private readonly ExportService<ISmurfExportStrategy, Smurf> _exportService = exportService;
 
@@ -32,7 +32,12 @@ namespace Smurf_Village_Statistical_Office.Controllers
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             var smurf = await _smurfService.GetByIdAsnyc(id);
-            return smurf == null ? NotFound() : Ok(smurf);
+            return smurf != null
+                ? Ok(smurf)
+                : NotFound(new
+                {
+                    message = "Smurf not found!"
+                });
         }
 
         [HttpPost("Smurfs")]

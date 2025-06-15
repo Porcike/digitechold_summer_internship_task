@@ -1,8 +1,13 @@
 ﻿using Smurf_Village_Statistical_Office.DTO.SmurfDtos;
-using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 {
-    public interface ISmurfService { }
+    public interface ISmurfService
+    {
+        Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy);
+        Task<SmurfDto?> GetByIdAsnyc(int id);
+        Task<SmurfDto> InsertAsync(CreateSmurfDto value);
+        Task UpdateAsync(UpdateSmurfDto value);
+        Task DeleteAsync(int id);
+    }
 }

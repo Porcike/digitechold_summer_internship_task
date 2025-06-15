@@ -1,16 +1,14 @@
 ﻿using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
-using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
 
 namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 {
-    public interface ILeisureVenueService : IEntityService<
-        LeisureVenue,
-        LeisureVenueDto, 
-        CreateLeisureVenueDto, 
-        UpdateLeisureVenueDto,
-        LeisureVenueFilterDto>
+    public interface ILeisureVenueService
     {
+        Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter, int page, int pageSize, string? orderBy);
+        Task<LeisureVenueDto?> GetByIdAsnyc(int id);
+        Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value);
+        Task UpdateAsync(UpdateLeisureVenueDto value);
+        Task DeleteAsync(int id);
         Task AddMemberAsync(int venueId, int smurfId);
         Task RemoveMemberAsync(int venueId, int smurfId);
     }

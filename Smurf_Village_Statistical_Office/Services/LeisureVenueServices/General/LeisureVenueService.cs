@@ -2,28 +2,19 @@
 using Smurf_Village_Statistical_Office.Data;
 using Smurf_Village_Statistical_Office.DTO.LeisureVenueDtos;
 using Smurf_Village_Statistical_Office.Models;
-using Smurf_Village_Statistical_Office.Services.General;
 using Smurf_Village_Statistical_Office.Utils;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 {
-    public class LeisureVenueService : BaseEntityService<
-        LeisureVenue, 
-        LeisureVenueDto, 
-        CreateLeisureVenueDto, 
-        UpdateLeisureVenueDto, 
-        LeisureVenueFilterDto>
+    public class LeisureVenueService(SmurfVillageContext context) : ILeisureVenueService
     {
-        private readonly SmurfVillageContext _context;
+        private readonly SmurfVillageContext _context = context;
 
-        public LeisureVenueService(SmurfVillageContext context)
-        {
-            AcceptedParams = new List<string> { "Name", "Capacity" };
-            _context = context;
-        }
+        private readonly string[] _acceptedParams = ["Name", "Capacity"];
 
-        public override async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(
+        public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(
             LeisureVenueFilterDto filter, 
             int page, 
             int pageSize,
@@ -53,7 +44,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             if (!string.IsNullOrWhiteSpace(orderBy))
             {
-                venuesQuery = Order(venuesQuery, orderBy);
+                venuesQuery = OrderUtil<LeisureVenue>.Order(venuesQuery, _acceptedParams, orderBy);
             }
 
             pageSize = Math.Min(pageSize, 100);
@@ -61,34 +52,20 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             return await venuesQuery
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .Select(v => new LeisureVenueDto
-                    {
-                        Id = v.Id,
-                        Name = v.Name,
-                        Capacity = v.Capacity,
-                        AcceptedBrand = v.AcceptedBrand,
-                        MemberIds = v.Members.Select(m => m.Id).ToList()
-                    })
+                    .Select(ToDtoExpression)
                     .ToListAsync();
         }
 
-        public override async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
+        public async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
         {
             return await _context.LeisureVenues
                 .AsNoTracking()
                 .Where(v => v.Id == id)
-                .Select(v => new LeisureVenueDto
-                {
-                    Id = v.Id,
-                    Name = v.Name,
-                    Capacity = v.Capacity,
-                    AcceptedBrand = v.AcceptedBrand,
-                    MemberIds = v.Members.Select(m => m.Id).ToList()
-                })
+                .Select(ToDtoExpression)
                 .FirstOrDefaultAsync();
         }
 
-        public override async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
+        public async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -100,28 +77,15 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                 .Where(s => value.MemberIds.Contains(s.Id))
                 .ToListAsync();
 
-            var venue = new LeisureVenue
-            {
-                Name = value.Name,
-                Capacity = value.Capacity,
-                Members = members,
-                AcceptedBrand = (Brand)value.AcceptedBrand
-            };
+            var venue = ToModel(value, members);
 
             await _context.LeisureVenues.AddAsync(venue);
             await _context.SaveChangesAsync();
 
-            return new LeisureVenueDto
-            {
-                Id = venue.Id,
-                Name = venue.Name,
-                Capacity = venue.Capacity,
-                AcceptedBrand = venue.AcceptedBrand,
-                MemberIds = venue.Members.Select(m => m.Id).ToList(),
-            };
+            return ToDto(venue);
         }
 
-        public override async Task UpdateAsync(UpdateLeisureVenueDto value)
+        public async Task UpdateAsync(UpdateLeisureVenueDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -151,7 +115,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             await _context.SaveChangesAsync();
         }
 
-        public override async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var venue = await _context.LeisureVenues.FindAsync(id);
             if (venue == null)
@@ -267,5 +231,31 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             return null;
         }
+
+        private Expression<Func<LeisureVenue, LeisureVenueDto>> ToDtoExpression = v => new LeisureVenueDto
+        {
+            Id = v.Id,
+            Name = v.Name,
+            Capacity = v.Capacity,
+            AcceptedBrand = v.AcceptedBrand,
+            MemberIds = v.Members.Select(m => m.Id).ToList()
+        };
+
+        private LeisureVenueDto ToDto(LeisureVenue v) => new LeisureVenueDto
+        {
+            Id = v.Id,
+            Name = v.Name,
+            Capacity = v.Capacity,
+            AcceptedBrand = v.AcceptedBrand,
+            MemberIds = v.Members.Select(m => m.Id).ToList()
+        };
+
+        private LeisureVenue ToModel(BaseLeisureVenueDto value, List<Smurf> members) => new LeisureVenue
+        {
+            Name = value.Name,
+            Capacity = value.Capacity,
+            Members = members,
+            AcceptedBrand = (Brand)value.AcceptedBrand
+        };
     }
 }

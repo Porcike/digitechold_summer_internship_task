@@ -2,7 +2,5 @@
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.ExportStrategies
 {
-    public interface ISmurfExportStrategy : IEntityExportStrategy
-    {
-    }
+    public interface ISmurfExportStrategy : IEntityExportStrategy { }
 }

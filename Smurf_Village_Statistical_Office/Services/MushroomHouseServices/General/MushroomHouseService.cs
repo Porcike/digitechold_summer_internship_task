@@ -8,20 +8,31 @@ using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.General
 {
-    public class MushroomHouseService(SmurfVillageContext context) : IMushroomHouseService
+    public class MushroomHouseService : BaseEntityService<
+        MushroomHouse, 
+        MushroomHouseDto, 
+        CreateMushroomHouseDto, 
+        UpdateMushroomHouseDto, 
+        MushroomHouseFilterDto>
     {
-        private readonly SmurfVillageContext _context = context;
+        private readonly SmurfVillageContext _context;
 
-        private string[] acceptedParams = ["Capacity"];
+        public MushroomHouseService(SmurfVillageContext context)
+        {
+            AcceptedParams = new List<string>() { "Capacity" };
+            _context = context;
+        }
 
-        public async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(MushroomHouseFilterDto filter, int page, int pageSize, string? orderBy)
+        public override async Task<IReadOnlyCollection<MushroomHouseDto>> GetAllAsync(
+            MushroomHouseFilterDto filter, 
+            int page, 
+            int pageSize, 
+            string? orderBy)
         {
             var isResidentProvided = string.IsNullOrEmpty(filter.resident);
             var isMinCapacityProvided = filter.minCapacity == null;
             var isMaxCapacityProvided = filter.maxCapacity == null;
             var isColorProvided = string.IsNullOrEmpty(filter.color);
-
-            pageSize = Math.Min(pageSize, 100);
 
             var housesQuery = _context.MushroomHouses
                 .AsNoTracking()
@@ -38,14 +49,10 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
 
             if(!string.IsNullOrWhiteSpace(orderBy))
             {
-                housesQuery = IEntityService<
-                    MushroomHouse,
-                    MushroomHouseDto,
-                    CreateMushroomHouseDto,
-                    UpdateMushroomHouseDto,
-                    MushroomHouseFilterDto>
-                    .Order(housesQuery, acceptedParams, orderBy);
+                housesQuery = Order(housesQuery, orderBy);
             }
+
+            pageSize = Math.Min(pageSize, 100);
 
             return await housesQuery
                 .Skip((page - 1) * pageSize)
@@ -62,7 +69,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 .ToListAsync();
         }
 
-        public async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
+        public override async Task<MushroomHouseDto?> GetByIdAsnyc(int id)
         {
             return await _context.MushroomHouses
                 .AsNoTracking()
@@ -79,7 +86,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<MushroomHouseDto> InsertAsync(CreateMushroomHouseDto value)
+        public override async Task<MushroomHouseDto> InsertAsync(CreateMushroomHouseDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -114,7 +121,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
             };
         }
 
-        public async Task UpdateAsync(UpdateMushroomHouseDto value)
+        public override async Task UpdateAsync(UpdateMushroomHouseDto value)
         {
             var  message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -145,7 +152,7 @@ namespace Smurf_Village_Statistical_Office.Services.MushroomHouseServices.Genera
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public override async Task DeleteAsync(int id)
         {
             var house = await _context.MushroomHouses.FindAsync(id);
             if (house == null)

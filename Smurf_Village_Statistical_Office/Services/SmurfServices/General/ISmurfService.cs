@@ -4,12 +4,5 @@ using Smurf_Village_Statistical_Office.Services.General;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 {
-    public interface ISmurfService : IEntityService<
-        Smurf,
-        SmurfDto, 
-        CreateSmurfDto, 
-        UpdateSmurfDto,
-        SmurfFilterDto>
-    {
-    }
+    public interface ISmurfService { }
 }

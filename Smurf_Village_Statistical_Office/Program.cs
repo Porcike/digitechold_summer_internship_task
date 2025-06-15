@@ -21,10 +21,10 @@ namespace Smurf_Village_Statistical_Office
                 options.UseInMemoryDatabase("SmurfVillageDb"));
 
             // Add services to the container.
-            builder.Services.AddScoped<ISmurfService, SmurfService>();
-            builder.Services.AddScoped<IMushroomHouseService, MushroomHouseService>();
-            builder.Services.AddScoped<IWorkingPlaceService, WorkingPlaceService>();
-            builder.Services.AddScoped<ILeisureVenueService, LeisureVenueService>();
+            builder.Services.AddScoped<SmurfService>();
+            builder.Services.AddScoped<MushroomHouseService>();
+            builder.Services.AddScoped<WorkingPlaceService>();
+            builder.Services.AddScoped<LeisureVenueService>();
 
             builder.Services.AddScoped<ISmurfExportStrategy, TxtExportSmurfStrategy>();
 

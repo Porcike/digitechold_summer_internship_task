@@ -8,13 +8,26 @@ using System.Data;
 
 namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 {
-    public class LeisureVenueService(SmurfVillageContext context) : ILeisureVenueService
+    public class LeisureVenueService : BaseEntityService<
+        LeisureVenue, 
+        LeisureVenueDto, 
+        CreateLeisureVenueDto, 
+        UpdateLeisureVenueDto, 
+        LeisureVenueFilterDto>
     {
-        private readonly SmurfVillageContext _context = context;
+        private readonly SmurfVillageContext _context;
 
-        private string[] acceptedParams = ["Name", "Capacity"];
+        public LeisureVenueService(SmurfVillageContext context)
+        {
+            AcceptedParams = new List<string> { "Name", "Capacity" };
+            _context = context;
+        }
 
-        public async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(LeisureVenueFilterDto filter, int page, int pageSize, string? orderBy)
+        public override async Task<IReadOnlyCollection<LeisureVenueDto>> GetAllAsync(
+            LeisureVenueFilterDto filter, 
+            int page, 
+            int pageSize,
+            string? orderBy)
         {
             var isNameProvided = string.IsNullOrWhiteSpace(filter.name);
             var isMinCapacityProvided = filter.minCapacity == null;
@@ -23,8 +36,6 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             var isBrandProvided = string.IsNullOrWhiteSpace(filter.brand);
 
             var brandParseWasSuccessful = Enum.TryParse(filter.brand, true, out Brand parsedBrand);
-
-            pageSize = Math.Min(pageSize, 100);
 
             var venuesQuery = _context.LeisureVenues
                 .AsNoTracking()
@@ -42,14 +53,10 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
 
             if (!string.IsNullOrWhiteSpace(orderBy))
             {
-                venuesQuery = IEntityService<
-                    LeisureVenue,
-                    LeisureVenueDto,
-                    CreateLeisureVenueDto,
-                    UpdateLeisureVenueDto,
-                    LeisureVenueFilterDto>
-                    .Order(venuesQuery, acceptedParams, orderBy);
+                venuesQuery = Order(venuesQuery, orderBy);
             }
+
+            pageSize = Math.Min(pageSize, 100);
 
             return await venuesQuery
                     .Skip((page - 1) * pageSize)
@@ -65,7 +72,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                     .ToListAsync();
         }
 
-        public async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
+        public override async Task<LeisureVenueDto?> GetByIdAsnyc(int id)
         {
             return await _context.LeisureVenues
                 .AsNoTracking()
@@ -81,7 +88,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
+        public override async Task<LeisureVenueDto> InsertAsync(CreateLeisureVenueDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -114,7 +121,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             };
         }
 
-        public async Task UpdateAsync(UpdateLeisureVenueDto value)
+        public override async Task UpdateAsync(UpdateLeisureVenueDto value)
         {
             var message = await CheckForGeneralConstraints(value);
             if (message != null)
@@ -144,7 +151,7 @@ namespace Smurf_Village_Statistical_Office.Services.LeisureVenueServices.General
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public override async Task DeleteAsync(int id)
         {
             var venue = await _context.LeisureVenues.FindAsync(id);
             if (venue == null)

@@ -7,13 +7,22 @@ using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 {
-    public class WorkingPlaceService(SmurfVillageContext context) : IWorkingPlaceService
+    public class WorkingPlaceService : BaseEntityService<
+        WorkingPlace, 
+        WorkingPlaceDto, 
+        CreateWorkingPlaceDto, 
+        UpdateWorkingPlaceDto, 
+        WorkingPlaceFilterDto>
     {
-        private readonly SmurfVillageContext _context = context;
+        private readonly SmurfVillageContext _context;
 
-        private string[] acceptedParams = ["Name"];
+        public WorkingPlaceService(SmurfVillageContext context)
+        {
+            AcceptedParams = new List<string> { "Name" };
+            _context = context;
+        }
 
-        public async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter, int page, int pageSize, string? orderBy)
+        public override async Task<IReadOnlyCollection<WorkingPlaceDto>> GetAllAsync(WorkingPlaceFilterDto filter, int page, int pageSize, string? orderBy)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isEmployeeProvided = string.IsNullOrEmpty(filter.employee);
@@ -35,13 +44,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
 
             if (!string.IsNullOrWhiteSpace(orderBy))
             {
-                workplacesQuery = IEntityService<
-                    WorkingPlace,
-                    WorkingPlaceDto,
-                    CreateWorkingPlaceDto,
-                    UpdateWorkingPlaceDto,
-                    WorkingPlaceFilterDto>
-                    .Order(workplacesQuery, acceptedParams, orderBy);
+                workplacesQuery = Order(workplacesQuery, orderBy);
             }
 
             pageSize = Math.Min(pageSize, 100);
@@ -59,7 +62,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                 .ToListAsync();
         }
 
-        public async Task<WorkingPlaceDto?> GetByIdAsnyc(int id)
+        public override async Task<WorkingPlaceDto?> GetByIdAsnyc(int id)
         {
             return await _context.WorkingPlaces
                 .AsNoTracking()
@@ -74,7 +77,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<WorkingPlaceDto> InsertAsync(CreateWorkingPlaceDto value)
+        public override async Task<WorkingPlaceDto> InsertAsync(CreateWorkingPlaceDto value)
         {
             var message = await CheckForGeneralConstrains(value);
             if (message != null)
@@ -105,7 +108,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
             };
         }
 
-        public async Task UpdateAsync(UpdateWorkingPlaceDto value)
+        public override async Task UpdateAsync(UpdateWorkingPlaceDto value)
         {
             var message = await CheckForGeneralConstrains(value);
             if (message != null)
@@ -133,7 +136,7 @@ namespace Smurf_Village_Statistical_Office.Services.WorkingPlaceServices.General
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public override async Task DeleteAsync(int id)
         {
             var workplace = await _context.WorkingPlaces.FindAsync(id);
             if (workplace == null)

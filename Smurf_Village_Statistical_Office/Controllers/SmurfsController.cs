@@ -10,10 +10,10 @@ namespace Smurf_Village_Statistical_Office.Controllers
     [Route("stat")]
     [ApiController]
     public class SmurfsController(
-        ISmurfService smurfService, 
+        SmurfService smurfService, 
         ExportService<ISmurfExportStrategy, Smurf> exportService) : ControllerBase
     {
-        private readonly ISmurfService _smurfService = smurfService;
+        private readonly SmurfService _smurfService = smurfService;
 
         private readonly ExportService<ISmurfExportStrategy, Smurf> _exportService = exportService;
 

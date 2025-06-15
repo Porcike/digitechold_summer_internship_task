@@ -8,13 +8,17 @@ using Smurf_Village_Statistical_Office.Utils;
 
 namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 {
-    public class SmurfService(SmurfVillageContext context) : ISmurfService
+    public class SmurfService : BaseEntityService<Smurf, SmurfDto, CreateSmurfDto, UpdateSmurfDto, SmurfFilterDto>
     {
-        private readonly SmurfVillageContext _context = context;
+        private readonly SmurfVillageContext _context;
 
-        private string[] acceptedParams = ["Name", "Age"];
+        public SmurfService(SmurfVillageContext context)
+        {
+            AcceptedParams = new List<string> { "Name", "Age" };
+            _context = context;
+        }
 
-        public async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy)
+        public override async Task<IReadOnlyCollection<SmurfDto>> GetAllAsync(SmurfFilterDto filter, int page, int pageSize, string? orderBy)
         {
             var isNameProvided = string.IsNullOrEmpty(filter.name);
             var isMinAgeProvided = filter.minAge == null;
@@ -46,13 +50,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
 
             if(!string.IsNullOrWhiteSpace(orderBy))
             {
-                smurfsQuery = IEntityService<
-                    Smurf,
-                    SmurfDto,
-                    CreateSmurfDto,
-                    UpdateSmurfDto,
-                    SmurfFilterDto>
-                    .Order(smurfsQuery, acceptedParams, orderBy);
+                smurfsQuery = Order(smurfsQuery, orderBy);
             }
 
             pageSize = Math.Min(pageSize, 100);
@@ -73,7 +71,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 .ToListAsync();
         }
 
-        public async Task<SmurfDto?> GetByIdAsnyc(int id)
+        public override async Task<SmurfDto?> GetByIdAsnyc(int id)
         {
             return await _context.Smurfs
                 .AsNoTracking()
@@ -91,7 +89,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<SmurfDto> InsertAsync(CreateSmurfDto value)
+        public override async Task<SmurfDto> InsertAsync(CreateSmurfDto value)
         {
             if(!CheckGeneralConstraints(value, out var message))
             {
@@ -123,7 +121,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             };
         }
 
-        public async Task UpdateAsync(UpdateSmurfDto value)
+        public override async Task UpdateAsync(UpdateSmurfDto value)
         {
             if(!CheckGeneralConstraints(value, out var message))
             {
@@ -176,7 +174,7 @@ namespace Smurf_Village_Statistical_Office.Services.SmurfServices.General
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public override async Task DeleteAsync(int id)
         {
             var smurf = await _context.Smurfs.FindAsync(id);
             if(smurf == null)

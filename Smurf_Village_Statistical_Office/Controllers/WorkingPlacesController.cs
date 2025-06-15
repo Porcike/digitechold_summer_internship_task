@@ -6,9 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class WorkingPlacesController(IWorkingPlaceService workingPlaceService) : ControllerBase
+    public class WorkingPlacesController(WorkingPlaceService workingPlaceService) : ControllerBase
     {
-        private readonly IWorkingPlaceService _workingplaceService = workingPlaceService;
+        private readonly WorkingPlaceService _workingplaceService = workingPlaceService;
 
         [HttpGet("WorkingPlaces")]
         public async Task<IActionResult> List(

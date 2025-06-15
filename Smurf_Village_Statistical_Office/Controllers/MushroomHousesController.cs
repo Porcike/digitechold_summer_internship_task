@@ -6,9 +6,9 @@ namespace Smurf_Village_Statistical_Office.Controllers
 {
     [Route("stat")]
     [ApiController]
-    public class MushroomHousesController(IMushroomHouseService mushroomService) : ControllerBase
+    public class MushroomHousesController(MushroomHouseService mushroomService) : ControllerBase
     {
-        private readonly IMushroomHouseService _mushroomService = mushroomService;
+        private readonly MushroomHouseService _mushroomService = mushroomService;
 
         [HttpGet("MushroomHouses")]
         public async Task<IActionResult> List(
